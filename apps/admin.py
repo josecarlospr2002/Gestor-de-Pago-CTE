@@ -34,6 +34,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'fecha_del_modelo',
         'forma_de_pago',
         'cuenta_de_empresa',
+        "identificador_del_proveedor",
     )
 
     list_display = (
@@ -41,9 +42,20 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'fecha_del_modelo',
         'forma_de_pago',
         'cuenta_de_empresa',
+        "identificador_del_proveedor",
+        "nombre_del_proveedor",
+        "codigo_del_proveedor",
+        "cuenta_bancaria",
+        "direccion_proveedor",
     )
 
-    readonly_fields = ('numero_de_H90',)
+    readonly_fields = (
+        'numero_de_H90',
+        "nombre_del_proveedor",
+        "codigo_del_proveedor",
+        "cuenta_bancaria",
+        "direccion_proveedor",
+    )
 
     search_fields = ('numero_de_H90', 'forma_de_pago',)
     list_display_links = list(list_display).copy()

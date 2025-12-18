@@ -36,6 +36,25 @@ class SolicitudesDePago(models.Model):
          choices=(("CUP", "CUP"), ("ANIR", "ANIR"), ("PRESUPUESTO", "PRESUPUESTO")),
          verbose_name="Cuenta de Empresa:"
     )
+    identificador_del_proveedor = models.ForeignKey(
+        Proveedores,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="solicitudes_de_pago"
+    )
+    nombre_del_proveedor = models.CharField(max_length=100, blank=True, null=True)
+    codigo_del_proveedor = models.CharField(max_length=20, blank=True, null=True)
+    cuenta_bancaria = models.CharField(max_length=50, blank=True, null=True)
+    direccion_proveedor = models.TextField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.identificador_del_proveedor:
+            self.nombre_del_proveedor = self.identificador_del_proveedor.tit_de_la_cuenta
+            self.codigo_del_proveedor = self.identificador_del_proveedor.codigo
+            self.cuenta_bancaria = self.identificador_del_proveedor.cuenta_banc
+            self.direccion_proveedor = self.identificador_del_proveedor.direccion
+            super().save(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         año = self.fecha_del_modelo.year
