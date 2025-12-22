@@ -5,6 +5,7 @@ from datetime import date
 
 from .models import *
 
+
 @admin.register(Proveedores)
 class ProveedoresAdmin(admin.ModelAdmin):
     list_display = (
@@ -26,8 +27,23 @@ class ProveedoresAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
 
+# Inline para mostrar la tabla de conceptos dentro de SolicitudesDePago
+class ConceptoDePagoInline(admin.TabularInline):
+    model = ConceptoDePago
+    extra = 0  # no filas vacías por defecto; cambia a 1 si quieres una fila vacía inicial
+    fields = ("concepto", "numero", "importe")
+
+
 @admin.register(SolicitudesDePago)
 class SolicitudesDePagoAdmin(admin.ModelAdmin):
+    list_display = (
+        'numero_de_H90',
+        'fecha_del_modelo',
+        'forma_de_pago',
+        'cuenta_de_empresa',
+        "identificador_del_proveedor",
+        'nombre_del_proveedor'
+    )
 
     fields = (
         'numero_de_H90',
@@ -35,15 +51,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'forma_de_pago',
         'cuenta_de_empresa',
         "identificador_del_proveedor",
-    )
-
-    list_display = (
-        'numero_de_H90',
-        'fecha_del_modelo',
-        'forma_de_pago',
-        'cuenta_de_empresa',
-        "identificador_del_proveedor",
-        "nombre_del_proveedor",
+        'nombre_del_proveedor',
         "codigo_del_proveedor",
         "cuenta_bancaria",
         "direccion_proveedor",
@@ -57,8 +65,20 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "direccion_proveedor",
     )
 
-    search_fields = ('numero_de_H90', 'forma_de_pago',)
+    search_fields = (
+        'numero_de_H90',
+        'forma_de_pago',
+        'cuenta_de_empresa',
+        'identificador_del_proveedor__ident_del_prov',
+        'identificador_del_proveedor__tit_de_la_cuenta',
+    )
+
     list_display_links = list(list_display).copy()
+
+    inlines = [ConceptoDePagoInline]  # ← aquí aparece tu “tablita” bajo la solicitud
+
+    class Media:
+        js = ("js/h90_autofill.js",)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -67,6 +87,11 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
                 "get-next-h90/",
                 self.admin_site.admin_view(self.get_next_h90),
                 name="solicitudesdepago_get_next_h90",
+            ),
+            path(
+                "get-proveedor/<int:pk>/",
+                self.admin_site.admin_view(self.get_proveedor),
+                name="solicitudesdepago_get_proveedor",
             ),
         ]
         return custom_urls + urls
@@ -83,12 +108,15 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             fecha_del_modelo__year=año
         ).order_by('-numero_de_H90').first()
 
-        if ultimo:
-            nuevo = ultimo.numero_de_H90 + 1
-        else:
-            nuevo = 1
-
+        nuevo = ultimo.numero_de_H90 + 1 if ultimo else 1
         return JsonResponse({"numero": nuevo})
 
-    class Media:
-        js = ("js/h90_autofill.js",)
+    def get_proveedor(self, request, pk):
+        proveedor = Proveedores.objects.get(pk=pk)
+        data = {
+            "titular": proveedor.tit_de_la_cuenta,
+            "codigo": proveedor.codigo,
+            "cuenta_bancaria": proveedor.cuenta_banc,
+            "direccion": proveedor.direccion,
+        }
+        return JsonResponse(data)
