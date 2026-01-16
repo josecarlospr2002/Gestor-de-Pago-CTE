@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator
+from num2words import num2words  # librería para convertir números a palabras
 
 
 class Proveedores(models.Model):
@@ -52,6 +53,45 @@ class SolicitudesDePago(models.Model):
     cuenta_bancaria = models.CharField(max_length=50, blank=True, null=True)
     direccion_proveedor = models.TextField(blank=True, null=True)
 
+    importe_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        editable=False,
+        verbose_name="Importe Total"
+    )
+
+    @property
+    def importe_total_letras(self):
+        """Convierte el importe total a letras en español."""
+        if self.importe_total is None:
+            return ""
+        entero = int(self.importe_total)
+        centavos = int(round((self.importe_total - entero) * 100))
+        texto_entero = num2words(entero, lang='es')
+        texto_centavos = num2words(centavos, lang='es')
+        return f"{texto_entero} pesos con {texto_centavos} centavos"
+
+    # 👉 Nuevo campo opcional
+    descripcion = models.TextField(
+        verbose_name="Descripción",
+        blank=True,
+        null=True,
+        help_text="Opcional: escriba cualquier detalle adicional sobre la solicitud."
+    )
+
+    def calcular_importe_total(self):
+        conceptos = self.conceptos.all()
+        if not conceptos.exists():
+            return 0, None
+
+        primer_concepto = conceptos.first().concepto
+        if all(c.concepto == primer_concepto for c in conceptos):
+            total = sum(c.importe for c in conceptos)
+            return total, None
+        else:
+            return 0, "Los conceptos son distintos, no se realizó la suma."
+
     def save(self, *args, **kwargs):
         # Copiar datos del proveedor si existe
         if self.identificador_del_proveedor:
@@ -103,6 +143,7 @@ class ConceptoDePago(models.Model):
         validators=[MinValueValidator(0)],
         verbose_name="Importe"
     )
+
     class Meta:
         verbose_name = "Concepto de pago"
         verbose_name_plural = "Conceptos de pago"

@@ -1,9 +1,30 @@
-from django.contrib import admin
+from django.core.exceptions import ValidationError
+from django.contrib import admin, messages
 from django.urls import path
 from django.http import JsonResponse
+from django.forms.models import BaseInlineFormSet
 from datetime import date
 
-from .models import *
+from .models import Proveedores, SolicitudesDePago, ConceptoDePago
+
+
+# Formset para validar que exista al menos un concepto válido
+class ConceptoDePagoInlineFormset(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        valid_forms = [
+            form for form in self.forms
+            if form.cleaned_data and not form.cleaned_data.get("DELETE", False)
+        ]
+        if len(valid_forms) < 1:
+            raise ValidationError("Debes agregar al menos un concepto de pago con número e importe.")
+
+
+class ConceptoDePagoInline(admin.TabularInline):
+    model = ConceptoDePago
+    formset = ConceptoDePagoInlineFormset
+    extra = 0
+    fields = ("concepto", "numero", "importe")
 
 
 @admin.register(Proveedores)
@@ -16,22 +37,8 @@ class ProveedoresAdmin(admin.ModelAdmin):
         'cuenta_banc',
         'direccion'
     )
-
     search_fields = ('ident_del_prov', 'tit_de_la_cuenta', 'codigo', 'cuenta_banc')
     list_display_links = list(list_display).copy()
-
-    def changelist_view(self, request, extra_context=None):
-        total = Proveedores.objects.count()
-        extra_context = extra_context or {}
-        extra_context['total_proveedores'] = total
-        return super().changelist_view(request, extra_context=extra_context)
-
-
-# Inline para mostrar la tabla de conceptos dentro de SolicitudesDePago
-class ConceptoDePagoInline(admin.TabularInline):
-    model = ConceptoDePago
-    extra = 0  # no filas vacías por defecto; cambia a 1 si quieres una fila vacía inicial
-    fields = ("concepto", "numero", "importe")
 
 
 @admin.register(SolicitudesDePago)
@@ -42,7 +49,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'forma_de_pago',
         'cuenta_de_empresa',
         "identificador_del_proveedor",
-        'nombre_del_proveedor'
+        'nombre_del_proveedor',
+        'importe_total',   # solo este, sin letras ni descripción
     )
 
     fields = (
@@ -55,6 +63,9 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "codigo_del_proveedor",
         "cuenta_bancaria",
         "direccion_proveedor",
+        "importe_total",
+        "importe_total_letras",  # se ve en el formulario
+        "descripcion",           # se ve en el formulario
     )
 
     readonly_fields = (
@@ -63,6 +74,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "codigo_del_proveedor",
         "cuenta_bancaria",
         "direccion_proveedor",
+        "importe_total",
+        "importe_total_letras",  # solo lectura
     )
 
     search_fields = (
@@ -74,11 +87,22 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     )
 
     list_display_links = list(list_display).copy()
-
-    inlines = [ConceptoDePagoInline]  # ← aquí aparece tu “tablita” bajo la solicitud
+    inlines = [ConceptoDePagoInline]
 
     class Media:
         js = ("js/h90_autofill.js",)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+
+        obj = form.instance
+        # Recalcular importe total si hay conceptos
+        if obj.conceptos.exists():
+            total, mensaje = obj.calcular_importe_total()
+            obj.importe_total = total
+            obj.save(update_fields=["importe_total"])
+            if mensaje:
+                messages.warning(request, mensaje)
 
     def get_urls(self):
         urls = super().get_urls()
