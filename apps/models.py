@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator
-from num2words import num2words  # librería para convertir números a palabras
+from num2words import num2words
 
 
 class Proveedores(models.Model):
@@ -61,9 +61,15 @@ class SolicitudesDePago(models.Model):
         verbose_name="Importe Total"
     )
 
+    descripcion = models.TextField(
+        verbose_name="Descripción",
+        blank=True,
+        null=True,
+        help_text="Opcional: escriba cualquier detalle adicional sobre la solicitud."
+    )
+
     @property
     def importe_total_letras(self):
-        """Convierte el importe total a letras en español."""
         if self.importe_total is None:
             return ""
         entero = int(self.importe_total)
@@ -72,25 +78,26 @@ class SolicitudesDePago(models.Model):
         texto_centavos = num2words(centavos, lang='es')
         return f"{texto_entero} pesos con {texto_centavos} centavos"
 
-    # 👉 Nuevo campo opcional
-    descripcion = models.TextField(
-        verbose_name="Descripción",
-        blank=True,
-        null=True,
-        help_text="Opcional: escriba cualquier detalle adicional sobre la solicitud."
-    )
-
     def calcular_importe_total(self):
-        conceptos = self.conceptos.all()
-        if not conceptos.exists():
-            return 0, None
+        normales = self.conceptos_normales.all()
+        salarios = self.conceptos_salarios.all()
 
-        primer_concepto = conceptos.first().concepto
-        if all(c.concepto == primer_concepto for c in conceptos):
-            total = sum(c.importe for c in conceptos)
+        if normales.exists() and salarios.exists():
+            return 0, "No se pueden guardar datos en ambas tablas a la vez."
+
+        if normales.exists():
+            primer_concepto = normales.first().concepto
+            if all(c.concepto == primer_concepto for c in normales):
+                total = sum(c.importe for c in normales)
+                return total, None
+            else:
+                return 0, "Los conceptos normales son distintos, no se realizó la suma."
+
+        if salarios.exists():
+            total = sum(c.importe for c in salarios)
             return total, None
-        else:
-            return 0, "Los conceptos son distintos, no se realizó la suma."
+
+        return 0, "Debe existir al menos un concepto en alguna tabla."
 
     def save(self, *args, **kwargs):
         # Copiar datos del proveedor si existe
@@ -123,7 +130,7 @@ class SolicitudesDePago(models.Model):
         return f"H90 {self.numero_de_H90} - {self.forma_de_pago}"
 
 
-class ConceptoDePago(models.Model):
+class ConceptoNormal(models.Model):
     CONCEPTO_CHOICES = (
         ("Factura", "Factura"),
         ("Prefactura", "Prefactura"),
@@ -133,10 +140,10 @@ class ConceptoDePago(models.Model):
     solicitud = models.ForeignKey(
         SolicitudesDePago,
         on_delete=models.CASCADE,
-        related_name="conceptos"
+        related_name="conceptos_normales"
     )
     concepto = models.CharField(max_length=20, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
-    numero = models.PositiveIntegerField(verbose_name="Número")
+    numero = models.PositiveIntegerField(verbose_name="Número")  # obligatorio
     importe = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -145,9 +152,41 @@ class ConceptoDePago(models.Model):
     )
 
     class Meta:
-        verbose_name = "Concepto de pago"
-        verbose_name_plural = "Conceptos de pago"
+        verbose_name = "Concepto normal"
+        verbose_name_plural = "Conceptos normales"
         ordering = ("concepto", "numero")
 
     def __str__(self):
         return f"{self.concepto} #{self.numero} - {self.importe}"
+
+
+class ConceptoSalario(models.Model):
+    CONCEPTO_CHOICES = (
+        ("Salario", "Salario"),
+        ("Vacaciones", "Vacaciones"),
+        ("Subsidio", "Subsidio"),
+        ("Prima", "Prima"),
+        ("Pago de Utilidades", "Pago de Utilidades"),
+        ("Reembolso", "Reembolso"),
+    )
+    solicitud = models.ForeignKey(
+        SolicitudesDePago,
+        on_delete=models.CASCADE,
+        related_name="conceptos_salarios"
+    )
+    concepto = models.CharField(max_length=30, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
+    numero = models.PositiveIntegerField(verbose_name="Número", null=True, blank=True)  # debe quedar vacío
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name="Importe"
+    )
+
+    class Meta:
+        verbose_name = "Concepto salario"
+        verbose_name_plural = "Conceptos salario"
+        ordering = ("concepto",)
+
+    def __str__(self):
+        return f"{self.concepto} - {self.importe}"
