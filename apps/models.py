@@ -87,6 +87,8 @@ class SolicitudesDePago(models.Model):
 
         if normales.exists():
             primer_concepto = normales.first().concepto
+            if primer_concepto == "Ninguno":
+                return sum(c.importe for c in normales), None
             if all(c.concepto == primer_concepto for c in normales):
                 total = sum(c.importe for c in normales)
                 return total, None
@@ -100,14 +102,12 @@ class SolicitudesDePago(models.Model):
         return 0, "Debe existir al menos un concepto en alguna tabla."
 
     def save(self, *args, **kwargs):
-        # Copiar datos del proveedor si existe
         if self.identificador_del_proveedor:
             self.nombre_del_proveedor = self.identificador_del_proveedor.tit_de_la_cuenta
             self.codigo_del_proveedor = self.identificador_del_proveedor.codigo
             self.cuenta_bancaria = self.identificador_del_proveedor.cuenta_banc
             self.direccion_proveedor = self.identificador_del_proveedor.direccion
 
-        # Asignar/actualizar número de H90 por forma de pago y año
         año = self.fecha_del_modelo.year
         if self.pk:
             original = SolicitudesDePago.objects.get(pk=self.pk)
@@ -143,7 +143,11 @@ class ConceptoNormal(models.Model):
         related_name="conceptos_normales"
     )
     concepto = models.CharField(max_length=20, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
-    numero = models.PositiveIntegerField(verbose_name="Número")  # obligatorio
+    numero = models.PositiveIntegerField(
+        verbose_name="Número",
+        null=True,
+        blank=True   # puede quedar vacío
+    )
     importe = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -157,7 +161,7 @@ class ConceptoNormal(models.Model):
         ordering = ("concepto", "numero")
 
     def __str__(self):
-        return f"{self.concepto} #{self.numero} - {self.importe}"
+        return f"{self.concepto} #{self.numero if self.numero else '-'} - {self.importe}"
 
 
 class ConceptoSalario(models.Model):

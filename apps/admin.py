@@ -28,8 +28,22 @@ class ConceptoNormalInlineFormset(BaseInlineFormSet):
         if valid_forms:
             self.has_normales = True
             conceptos = [form.cleaned_data.get("concepto") for form in valid_forms]
+
+            # Todos los conceptos normales deben ser iguales
             if len(set(conceptos)) > 1:
                 raise ValidationError("En conceptos normales, todos deben ser iguales.")
+
+            for form in valid_forms:
+                concepto = form.cleaned_data.get("concepto")
+                numero = form.cleaned_data.get("numero")
+                importe = form.cleaned_data.get("importe")
+
+                # 🔒 Reglas especiales para 'Ninguno'
+                if concepto == "Ninguno":
+                    if numero:  # Si intentan poner número
+                        raise ValidationError("Cuando el concepto es 'Ninguno', el campo Número debe quedar vacío.")
+                    if importe is None or importe <= 0:
+                        raise ValidationError("Cuando el concepto es 'Ninguno', debe indicar un importe mayor que 0.")
 
 
 class ConceptoNormalInline(admin.TabularInline):
@@ -56,7 +70,9 @@ class ConceptoSalarioInlineFormset(BaseInlineFormSet):
 
             # Validación extra: si hay conceptos de salario, forma de pago debe ser Cheque
             if self.instance.forma_de_pago != "Cheque":
-                raise ValidationError("Cuando se registran conceptos de salario, la forma de pago obligatoriamente debe ser Cheque.")
+                raise ValidationError(
+                    "Cuando se registran conceptos de salario, la forma de pago obligatoriamente debe ser Cheque."
+                )
 
 
 class ConceptoSalarioInline(admin.TabularInline):
@@ -118,7 +134,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "codigo_del_proveedor",
         "cuenta_bancaria",
         "direccion_proveedor",
-        "importe_total",
+        "importe_total",          # 🔒 siempre readonly
         "importe_total_letras",
     )
 
@@ -136,7 +152,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         normales = any(getattr(fs, "has_normales", False) for fs in formsets)
         salarios = any(getattr(fs, "has_salarios", False) for fs in formsets)
 
-        # Validaciones globales: bloquean el guardado
+        # Validaciones globales
         if normales and salarios:
             raise ValidationError("No puede llenar datos en ambas tablas al mismo tiempo.")
 
