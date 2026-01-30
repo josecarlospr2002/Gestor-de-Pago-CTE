@@ -9,14 +9,28 @@ from datetime import date
 from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario
 
 
-# Formulario personalizado para SolicitudesDePago
+# --- Formulario personalizado para SolicitudesDePago ---
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
         model = SolicitudesDePago
         fields = "__all__"
+        help_texts = {
+            "fecha_del_modelo": "La fecha no puede ser futura. Solo se permiten fechas de hoy o anteriores."
+        }
+        widgets = {
+            "fecha_del_modelo": forms.DateInput(
+                format="%Y-%m-%d",   # 🔥 formato interno que Django usa
+                attrs={
+                    "type": "date",
+                    "class": "vDateField",
+                    "max": date.today().strftime("%Y-%m-%d"),
+                    "value": date.today().strftime("%Y-%m-%d"),  # 🔥 valor inicial = hoy
+                }
+            )
+        }
 
 
-# Inlines para Conceptos Normales
+# --- Inlines para Conceptos Normales ---
 class ConceptoNormalInlineFormset(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -39,7 +53,7 @@ class ConceptoNormalInline(admin.TabularInline):
     fields = ("concepto", "numero", "importe")
 
 
-# Inlines para Conceptos Salario
+# --- Inlines para Conceptos Salario ---
 class ConceptoSalarioInlineFormset(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -64,6 +78,7 @@ class ConceptoSalarioInline(admin.TabularInline):
     fields = ("concepto", "importe")
 
 
+# --- Admin de Proveedores ---
 @admin.register(Proveedores)
 class ProveedoresAdmin(admin.ModelAdmin):
     list_display = (
@@ -78,6 +93,7 @@ class ProveedoresAdmin(admin.ModelAdmin):
     list_display_links = list(list_display).copy()
 
 
+# --- Admin de Solicitudes ---
 @admin.register(SolicitudesDePago)
 class SolicitudesDePagoAdmin(admin.ModelAdmin):
     form = SolicitudesDePagoForm
@@ -113,7 +129,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = (
-        'numero_de_H90',
         "nombre_del_proveedor",
         "codigo_del_proveedor",
         "cuenta_bancaria",
@@ -123,6 +138,20 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "importe_inversiones",
     )
 
+    def save_model(self, request, obj, form, change):
+        año = obj.fecha_del_modelo.year
+        if obj.numero_de_H90:
+            existe = SolicitudesDePago.objects.filter(
+                forma_de_pago=obj.forma_de_pago,
+                fecha_del_modelo__year=año,
+                numero_de_H90=obj.numero_de_H90
+            ).exclude(pk=obj.pk).exists()
+            if existe:
+                raise ValidationError(
+                    f"Ya existe un H90 con número {obj.numero_de_H90} para {obj.forma_de_pago} en {año}."
+                )
+        super().save_model(request, obj, form, change)
+
     def save_related(self, request, form, formsets, change):
         normales = any(getattr(fs, "has_normales", False) for fs in formsets)
         salarios = any(getattr(fs, "has_salarios", False) for fs in formsets)
@@ -130,7 +159,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         if normales and salarios:
             raise ValidationError("No puede llenar datos en ambas tablas al mismo tiempo.")
         if not normales and not salarios:
-            raise ValidationError("Debe agregar al menos un concepto en una de las tablas.")
+            raise ValidationError("Debe agregar al menos un concepto en alguna de las tablas.")
 
         super().save_related(request, form, formsets, change)
 

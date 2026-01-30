@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from num2words import num2words
+import datetime
 
 
 class Proveedores(models.Model):
@@ -29,8 +32,16 @@ class Proveedores(models.Model):
 
 
 class SolicitudesDePago(models.Model):
-    numero_de_H90 = models.IntegerField(verbose_name="H90:", null=True, blank=True)
-    fecha_del_modelo = models.DateField(verbose_name="Fecha del Modelo")
+    numero_de_H90 = models.IntegerField(
+        verbose_name="H90:",
+        null=True,
+        blank=True,
+        help_text="Número consecutivo por forma de pago y año. Editable, pero no puede repetirse."
+    )
+    fecha_del_modelo = models.DateField(
+        verbose_name="Fecha del Modelo"
+        # 🔥 ya no tiene default, el usuario la selecciona manualmente
+    )
     forma_de_pago = models.CharField(
         max_length=255,
         choices=(("Transferencia", "Transferencia"), ("Cheque", "Cheque")),
@@ -115,32 +126,51 @@ class SolicitudesDePago(models.Model):
 
         return 0, "Debe existir al menos un concepto en alguna tabla."
 
+    def clean(self):
+        """Validaciones de fecha y unicidad por forma de pago + año"""
+        super().clean()
+        hoy = timezone.now().date()
+
+        # Asegurar que fecha_del_modelo sea un date
+        fecha = self.fecha_del_modelo
+        if isinstance(fecha, datetime.datetime):
+            fecha = fecha.date()
+
+        # 🔥 Validación de fecha: no puede ser futura
+        if fecha > hoy:
+            raise ValidationError({
+                "fecha_del_modelo": "La fecha no puede ser futura. Solo se permiten hoy o fechas anteriores."
+            })
+
+        # Validación de unicidad de H90 por forma de pago + año
+        año = fecha.year
+        if self.numero_de_H90:
+            existe = SolicitudesDePago.objects.filter(
+                forma_de_pago=self.forma_de_pago,
+                fecha_del_modelo__year=año,
+                numero_de_H90=self.numero_de_H90
+            ).exclude(pk=self.pk).exists()
+            if existe:
+                raise ValidationError({
+                    "numero_de_H90": f"Ya existe un H90 con número {self.numero_de_H90} para {self.forma_de_pago} en {año}."
+                })
+
     def save(self, *args, **kwargs):
-        # Copiar datos del proveedor
         if self.identificador_del_proveedor:
             self.nombre_del_proveedor = self.identificador_del_proveedor.tit_de_la_cuenta
             self.codigo_del_proveedor = self.identificador_del_proveedor.codigo
             self.cuenta_bancaria = self.identificador_del_proveedor.cuenta_banc
             self.direccion_proveedor = self.identificador_del_proveedor.direccion
 
-        # Asignar número de H90
         año = self.fecha_del_modelo.year
-        if self.pk:
-            original = SolicitudesDePago.objects.get(pk=self.pk)
-            if original.forma_de_pago != self.forma_de_pago or original.fecha_del_modelo.year != año:
-                ultimo = SolicitudesDePago.objects.filter(
-                    forma_de_pago=self.forma_de_pago,
-                    fecha_del_modelo__year=año
-                ).order_by('-numero_de_H90').first()
-                self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
-        else:
+        if not self.numero_de_H90:  # si el usuario no lo asigna manualmente
             ultimo = SolicitudesDePago.objects.filter(
                 forma_de_pago=self.forma_de_pago,
                 fecha_del_modelo__year=año
             ).order_by('-numero_de_H90').first()
             self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
 
-        #  Lógica de inversiones
+        # 🔥 Lógica de inversiones
         if self.inversiones:
             self.importe_inversiones = self.importe_total
         else:
@@ -165,7 +195,15 @@ class ConceptoNormal(models.Model):
         related_name="conceptos_normales"
     )
     concepto = models.CharField(max_length=20, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
-    numero = models.PositiveIntegerField(verbose_name="Número", null=True, blank=True)
+
+    numero = models.CharField(
+        max_length=50,
+        verbose_name="Número",
+        null=True,
+        blank=True,
+        help_text="Puede contener números, letras, espacios o caracteres especiales."
+    )
+
     importe = models.DecimalField(
         max_digits=12,
         decimal_places=2,
