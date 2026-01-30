@@ -61,6 +61,20 @@ class SolicitudesDePago(models.Model):
         verbose_name="Importe Total"
     )
 
+    inversiones = models.BooleanField(
+        default=False,
+        verbose_name="Inversiones",
+        help_text="Marque si esta solicitud corresponde a inversiones."
+    )
+
+    importe_inversiones = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        editable=False,
+        verbose_name="Importe de Inversiones"
+    )
+
     descripcion = models.TextField(
         verbose_name="Descripción",
         blank=True,
@@ -102,12 +116,14 @@ class SolicitudesDePago(models.Model):
         return 0, "Debe existir al menos un concepto en alguna tabla."
 
     def save(self, *args, **kwargs):
+        # Copiar datos del proveedor
         if self.identificador_del_proveedor:
             self.nombre_del_proveedor = self.identificador_del_proveedor.tit_de_la_cuenta
             self.codigo_del_proveedor = self.identificador_del_proveedor.codigo
             self.cuenta_bancaria = self.identificador_del_proveedor.cuenta_banc
             self.direccion_proveedor = self.identificador_del_proveedor.direccion
 
+        # Asignar número de H90
         año = self.fecha_del_modelo.year
         if self.pk:
             original = SolicitudesDePago.objects.get(pk=self.pk)
@@ -123,6 +139,12 @@ class SolicitudesDePago(models.Model):
                 fecha_del_modelo__year=año
             ).order_by('-numero_de_H90').first()
             self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
+
+        #  Lógica de inversiones
+        if self.inversiones:
+            self.importe_inversiones = self.importe_total
+        else:
+            self.importe_inversiones = 0
 
         super().save(*args, **kwargs)
 
@@ -143,11 +165,7 @@ class ConceptoNormal(models.Model):
         related_name="conceptos_normales"
     )
     concepto = models.CharField(max_length=20, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
-    numero = models.PositiveIntegerField(
-        verbose_name="Número",
-        null=True,
-        blank=True   # puede quedar vacío
-    )
+    numero = models.PositiveIntegerField(verbose_name="Número", null=True, blank=True)
     importe = models.DecimalField(
         max_digits=12,
         decimal_places=2,

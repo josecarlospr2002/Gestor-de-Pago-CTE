@@ -9,14 +9,14 @@ from datetime import date
 from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario
 
 
-# --- Formulario personalizado para SolicitudesDePago ---
+# Formulario personalizado para SolicitudesDePago
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
         model = SolicitudesDePago
         fields = "__all__"
 
 
-# --- Inlines para Conceptos Normales ---
+# Inlines para Conceptos Normales
 class ConceptoNormalInlineFormset(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -28,22 +28,8 @@ class ConceptoNormalInlineFormset(BaseInlineFormSet):
         if valid_forms:
             self.has_normales = True
             conceptos = [form.cleaned_data.get("concepto") for form in valid_forms]
-
-            # Todos los conceptos normales deben ser iguales
             if len(set(conceptos)) > 1:
                 raise ValidationError("En conceptos normales, todos deben ser iguales.")
-
-            for form in valid_forms:
-                concepto = form.cleaned_data.get("concepto")
-                numero = form.cleaned_data.get("numero")
-                importe = form.cleaned_data.get("importe")
-
-                # 🔒 Reglas especiales para 'Ninguno'
-                if concepto == "Ninguno":
-                    if numero:  # Si intentan poner número
-                        raise ValidationError("Cuando el concepto es 'Ninguno', el campo Número debe quedar vacío.")
-                    if importe is None or importe <= 0:
-                        raise ValidationError("Cuando el concepto es 'Ninguno', debe indicar un importe mayor que 0.")
 
 
 class ConceptoNormalInline(admin.TabularInline):
@@ -53,7 +39,7 @@ class ConceptoNormalInline(admin.TabularInline):
     fields = ("concepto", "numero", "importe")
 
 
-# --- Inlines para Conceptos Salario ---
+# Inlines para Conceptos Salario
 class ConceptoSalarioInlineFormset(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -67,12 +53,8 @@ class ConceptoSalarioInlineFormset(BaseInlineFormSet):
             for form in valid_forms:
                 if form.cleaned_data.get("numero"):
                     raise ValidationError("En conceptos de salario, el campo Número debe quedar vacío.")
-
-            # Validación extra: si hay conceptos de salario, forma de pago debe ser Cheque
             if self.instance.forma_de_pago != "Cheque":
-                raise ValidationError(
-                    "Cuando se registran conceptos de salario, la forma de pago obligatoriamente debe ser Cheque."
-                )
+                raise ValidationError("Cuando se registran conceptos de salario, la forma de pago debe ser Cheque.")
 
 
 class ConceptoSalarioInline(admin.TabularInline):
@@ -82,7 +64,6 @@ class ConceptoSalarioInline(admin.TabularInline):
     fields = ("concepto", "importe")
 
 
-# --- Admin de Proveedores ---
 @admin.register(Proveedores)
 class ProveedoresAdmin(admin.ModelAdmin):
     list_display = (
@@ -97,7 +78,6 @@ class ProveedoresAdmin(admin.ModelAdmin):
     list_display_links = list(list_display).copy()
 
 
-# --- Admin de Solicitudes ---
 @admin.register(SolicitudesDePago)
 class SolicitudesDePagoAdmin(admin.ModelAdmin):
     form = SolicitudesDePagoForm
@@ -111,6 +91,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "identificador_del_proveedor",
         'nombre_del_proveedor',
         'importe_total',
+        'inversiones',
+        'importe_inversiones',
     )
 
     fields = (
@@ -125,6 +107,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "direccion_proveedor",
         "importe_total",
         "importe_total_letras",
+        "inversiones",
+        "importe_inversiones",
         "descripcion",
     )
 
@@ -134,28 +118,17 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "codigo_del_proveedor",
         "cuenta_bancaria",
         "direccion_proveedor",
-        "importe_total",          # 🔒 siempre readonly
+        "importe_total",
         "importe_total_letras",
+        "importe_inversiones",
     )
-
-    search_fields = (
-        'numero_de_H90',
-        'forma_de_pago',
-        'cuenta_de_empresa',
-        'identificador_del_proveedor__ident_del_prov',
-        'identificador_del_proveedor__tit_de_la_cuenta',
-    )
-
-    list_display_links = list(list_display).copy()
 
     def save_related(self, request, form, formsets, change):
         normales = any(getattr(fs, "has_normales", False) for fs in formsets)
         salarios = any(getattr(fs, "has_salarios", False) for fs in formsets)
 
-        # Validaciones globales
         if normales and salarios:
             raise ValidationError("No puede llenar datos en ambas tablas al mismo tiempo.")
-
         if not normales and not salarios:
             raise ValidationError("Debe agregar al menos un concepto en una de las tablas.")
 
@@ -164,23 +137,15 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         obj = form.instance
         total, mensaje = obj.calcular_importe_total()
         obj.importe_total = total
-        obj.save(update_fields=["importe_total"])
+        obj.save(update_fields=["importe_total", "importe_inversiones"])
         if mensaje:
             messages.warning(request, mensaje)
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path(
-                "get-next-h90/",
-                self.admin_site.admin_view(self.get_next_h90),
-                name="solicitudesdepago_get_next_h90",
-            ),
-            path(
-                "get-proveedor/<int:pk>/",
-                self.admin_site.admin_view(self.get_proveedor),
-                name="solicitudesdepago_get_proveedor",
-            ),
+            path("get-next-h90/", self.admin_site.admin_view(self.get_next_h90), name="solicitudesdepago_get_next_h90"),
+            path("get-proveedor/<int:pk>/", self.admin_site.admin_view(self.get_proveedor), name="solicitudesdepago_get_proveedor"),
         ]
         return custom_urls + urls
 
