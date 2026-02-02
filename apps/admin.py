@@ -5,7 +5,6 @@ from django.urls import path
 from django.http import JsonResponse
 from django.forms.models import BaseInlineFormSet
 from datetime import date
-
 from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario
 
 
@@ -19,15 +18,49 @@ class SolicitudesDePagoForm(forms.ModelForm):
         }
         widgets = {
             "fecha_del_modelo": forms.DateInput(
-                format="%Y-%m-%d",   # 🔥 formato interno que Django usa
+                format="%Y-%m-%d",
                 attrs={
                     "type": "date",
                     "class": "vDateField",
                     "max": date.today().strftime("%Y-%m-%d"),
-                    "value": date.today().strftime("%Y-%m-%d"),  # 🔥 valor inicial = hoy
+                    "value": date.today().strftime("%Y-%m-%d"),
                 }
             )
         }
+
+
+# --- Filtro personalizado por Año ---
+class AñoFilter(admin.SimpleListFilter):
+    title = 'Año'
+    parameter_name = 'año'
+
+    def lookups(self, request, model_admin):
+        años = SolicitudesDePago.objects.dates('fecha_del_modelo', 'year')
+        return [(a.year, a.year) for a in años]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha_del_modelo__year=self.value())
+        return queryset
+
+
+# --- Filtro personalizado por Mes ---
+class MesFilter(admin.SimpleListFilter):
+    title = 'Mes'
+    parameter_name = 'mes'
+
+    def lookups(self, request, model_admin):
+        meses = [
+            (1, "Enero"), (2, "Febrero"), (3, "Marzo"), (4, "Abril"),
+            (5, "Mayo"), (6, "Junio"), (7, "Julio"), (8, "Agosto"),
+            (9, "Septiembre"), (10, "Octubre"), (11, "Noviembre"), (12, "Diciembre"),
+        ]
+        return meses
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha_del_modelo__month=self.value())
+        return queryset
 
 
 # --- Inlines para Conceptos Normales ---
@@ -82,16 +115,20 @@ class ConceptoSalarioInline(admin.TabularInline):
 @admin.register(Proveedores)
 class ProveedoresAdmin(admin.ModelAdmin):
     list_display = (
-        'ident_del_prov',
-        'tit_de_la_cuenta',
-        'abrev_del_tit',
         'codigo',
+        'mostrar_beneficiario',
+        'tit_de_la_cuenta',
         'cuenta_banc',
         'direccion'
     )
-    search_fields = ('ident_del_prov', 'tit_de_la_cuenta', 'codigo', 'cuenta_banc')
+    search_fields = ('codigo', 'ident_del_prov', 'tit_de_la_cuenta', 'cuenta_banc')
     list_display_links = list(list_display).copy()
 
+    def mostrar_beneficiario(self, obj):
+        return obj.ident_del_prov
+
+    mostrar_beneficiario.short_description = "Beneficiario:"   # 🔥 nombre de la columna
+    mostrar_beneficiario.admin_order_field = "ident_del_prov" # 🔥 habilita ordenación alfabética
 
 # --- Admin de Solicitudes ---
 @admin.register(SolicitudesDePago)
@@ -110,6 +147,16 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'inversiones',
         'importe_inversiones',
     )
+
+    # 🔥 Filtros separados: Cuenta, Año y Mes
+    list_filter = (
+        'cuenta_de_empresa',
+        'forma_de_pago',
+        MesFilter,
+        AñoFilter,
+    )
+
+    list_display_links = list(list_display).copy()
 
     fields = (
         'numero_de_H90',
