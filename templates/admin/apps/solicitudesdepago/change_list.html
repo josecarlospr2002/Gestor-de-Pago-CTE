@@ -1,0 +1,36 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+    <a class="btn btn-primary btn-sm"
+       style="background-color: #1a88ff;
+              border-color: #0062cc;
+              cursor: default;
+              pointer-events: none;
+              margin-right: 10px;
+              padding-top: 7px;
+              padding-bottom: 7px;">
+        <i class="fas fa-list" style="margin-right: 6px;"></i>
+        Cantidad de Pagos:
+        <span style="font-weight: normal; margin-left: 6px;">
+            {{ cantidad_pagos }}
+        </span>
+    </a>
+
+    <a class="btn btn-success btn-sm"
+        style="background-color: #1a88ff;
+              border-color: #0062cc;
+              cursor: default;
+              pointer-events: none;
+              margin-right: 10px;
+              padding-top: 7px;
+              padding-bottom: 7px;">
+        <i class="fas fa-dollar-sign" style="margin-right: 6px;"></i>
+        Importe:
+        <span style="font-weight: normal; margin-left: 6px;">
+            {{ importe_total_display }}
+        </span>
+    </a>
+
+
+    {{ block.super }}
+{% endblock %}

@@ -40,7 +40,6 @@ class SolicitudesDePago(models.Model):
     )
     fecha_del_modelo = models.DateField(
         verbose_name="Fecha del Modelo"
-        # 🔥 ya no tiene default, el usuario la selecciona manualmente
     )
     forma_de_pago = models.CharField(
         max_length=255,
@@ -136,7 +135,6 @@ class SolicitudesDePago(models.Model):
         if isinstance(fecha, datetime.datetime):
             fecha = fecha.date()
 
-        # 🔥 Validación de fecha: no puede ser futura
         if fecha > hoy:
             raise ValidationError({
                 "fecha_del_modelo": "La fecha no puede ser futura. Solo se permiten hoy o fechas anteriores."
@@ -170,7 +168,7 @@ class SolicitudesDePago(models.Model):
             ).order_by('-numero_de_H90').first()
             self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
 
-        # 🔥 Lógica de inversiones
+        # Lógica de inversiones
         if self.inversiones:
             self.importe_inversiones = self.importe_total
         else:
@@ -215,6 +213,19 @@ class ConceptoNormal(models.Model):
         verbose_name = "Concepto normal"
         verbose_name_plural = "Conceptos normales"
         ordering = ("concepto", "numero")
+
+    def clean(self):
+        super().clean()
+        if self.concepto in ["Factura", "Prefactura", "Cotización"]:
+            if not self.numero:
+                raise ValidationError({
+                    "numero": f"El campo Número es obligatorio para el concepto {self.concepto}."
+                })
+        elif self.concepto == "Ninguno":
+            if self.numero:
+                raise ValidationError({
+                    "numero": "El campo Número debe quedar vacío cuando el concepto es 'Ninguno'."
+                })
 
     def __str__(self):
         return f"{self.concepto} #{self.numero if self.numero else '-'} - {self.importe}"

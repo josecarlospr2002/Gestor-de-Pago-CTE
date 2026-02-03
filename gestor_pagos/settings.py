@@ -36,7 +36,7 @@ ROOT_URLCONF = 'gestor_pagos.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -65,13 +65,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# 🌍 Internacionalización
-LANGUAGE_CODE = 'es'              # idioma español
-TIME_ZONE = 'America/Havana'      # zona horaria Cuba
+LANGUAGE_CODE = 'es'
+USE_L10N = True
+TIME_ZONE = 'America/Havana'
 USE_I18N = True
 USE_TZ = True
 
-# Formatos de fecha y hora
 DATE_FORMAT = "d/m/Y"             # cómo se muestran las fechas -> 30/01/2026
 DATETIME_FORMAT = "d/m/Y H:i"     # fecha y hora -> 30/01/2026 14:35
 DATE_INPUT_FORMATS = ["%d/%m/%Y"] # cómo se aceptan fechas en formularios
@@ -84,3 +83,4 @@ STATICFILES_DIRS = []
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/admin/'
+

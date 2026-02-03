@@ -4,11 +4,12 @@ from django.contrib import admin, messages
 from django.urls import path
 from django.http import JsonResponse
 from django.forms.models import BaseInlineFormSet
+from django.db.models import Sum
 from datetime import date
 from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario
 
 
-# --- Formulario personalizado para SolicitudesDePago ---
+# Formulario personalizado para SolicitudesDePago
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
         model = SolicitudesDePago
@@ -25,11 +26,18 @@ class SolicitudesDePagoForm(forms.ModelForm):
                     "max": date.today().strftime("%Y-%m-%d"),
                     "value": date.today().strftime("%Y-%m-%d"),
                 }
-            )
+            ),
+            "descripcion": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "cols": 50,
+                    "style": "resize:none;"
+                }
+            ),
         }
 
 
-# --- Filtro personalizado por Año ---
+# Filtro personalizado por Año
 class AñoFilter(admin.SimpleListFilter):
     title = 'Año'
     parameter_name = 'año'
@@ -44,7 +52,7 @@ class AñoFilter(admin.SimpleListFilter):
         return queryset
 
 
-# --- Filtro personalizado por Mes ---
+# Filtro personalizado por Mes
 class MesFilter(admin.SimpleListFilter):
     title = 'Mes'
     parameter_name = 'mes'
@@ -63,7 +71,7 @@ class MesFilter(admin.SimpleListFilter):
         return queryset
 
 
-# --- Inlines para Conceptos Normales ---
+# Inlines para Conceptos Normales
 class ConceptoNormalInlineFormset(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -86,7 +94,7 @@ class ConceptoNormalInline(admin.TabularInline):
     fields = ("concepto", "numero", "importe")
 
 
-# --- Inlines para Conceptos Salario ---
+# Inlines para Conceptos Salario
 class ConceptoSalarioInlineFormset(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -111,7 +119,6 @@ class ConceptoSalarioInline(admin.TabularInline):
     fields = ("concepto", "importe")
 
 
-# --- Admin de Proveedores ---
 @admin.register(Proveedores)
 class ProveedoresAdmin(admin.ModelAdmin):
     list_display = (
@@ -127,10 +134,10 @@ class ProveedoresAdmin(admin.ModelAdmin):
     def mostrar_beneficiario(self, obj):
         return obj.ident_del_prov
 
-    mostrar_beneficiario.short_description = "Beneficiario:"   # 🔥 nombre de la columna
-    mostrar_beneficiario.admin_order_field = "ident_del_prov" # 🔥 habilita ordenación alfabética
+    mostrar_beneficiario.short_description = "Beneficiario:"
+    mostrar_beneficiario.admin_order_field = "ident_del_prov"
 
-# --- Admin de Solicitudes ---
+
 @admin.register(SolicitudesDePago)
 class SolicitudesDePagoAdmin(admin.ModelAdmin):
     form = SolicitudesDePagoForm
@@ -138,17 +145,11 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
 
     list_display = (
         'numero_de_H90',
-        'fecha_del_modelo',
-        'forma_de_pago',
-        'cuenta_de_empresa',
         "identificador_del_proveedor",
-        'nombre_del_proveedor',
-        'importe_total',
-        'inversiones',
-        'importe_inversiones',
+        'mostrar_importe_total',
+        'fecha_del_modelo',
     )
 
-    # 🔥 Filtros separados: Cuenta, Año y Mes
     list_filter = (
         'cuenta_de_empresa',
         'forma_de_pago',
@@ -185,6 +186,49 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "importe_inversiones",
     )
 
+    # Métodos para mostrar importes formateados
+    def mostrar_importe_total(self, obj):
+        if obj.importe_total is not None:
+            s = f"{float(obj.importe_total):,.2f}"
+            return s.replace(",", " ").replace(".", ",")
+        return "0,00"
+    mostrar_importe_total.short_description = "Importe Total"
+
+    def mostrar_importe_inversiones(self, obj):
+        if obj.importe_inversiones is not None:
+            s = f"{float(obj.importe_inversiones):,.2f}"
+            return s.replace(",", " ").replace(".", ",")
+        return "0,00"
+    mostrar_importe_inversiones.short_description = "Importe Inversiones"
+
+    # Contadores dinámicos para botones
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        try:
+            queryset = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+
+        cantidad_pagos = queryset.count()
+        importe_total = queryset.aggregate(total=Sum('importe_total'))['total'] or 0
+        importe_inversiones = queryset.aggregate(total=Sum('importe_inversiones'))['total'] or 0
+
+        def formato(valor):
+            if valor is not None:
+                s = f"{float(valor):,.2f}"
+                return s.replace(",", " ").replace(".", ",")
+            return "0,00"
+
+        extra_context['cantidad_pagos'] = cantidad_pagos
+        extra_context['importe_total_display'] = formato(importe_total)
+        extra_context['importe_inversiones_display'] = formato(importe_inversiones)
+
+        response.context_data.update(extra_context)
+        return response
+
+    # resto de métodos
     def save_model(self, request, obj, form, change):
         año = obj.fecha_del_modelo.year
         if obj.numero_de_H90:
@@ -204,7 +248,9 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         salarios = any(getattr(fs, "has_salarios", False) for fs in formsets)
 
         if normales and salarios:
-            raise ValidationError("No puede llenar datos en ambas tablas al mismo tiempo.")
+            raise ValidationError("No puede dejar llenas ni vacías ambas tablas. Solo una puede contener datos.")
+        if not normales and not salarios:
+            raise ValidationError("No puede dejar llenas ni vacías ambas tablas. Solo una puede contener datos.")
         if not normales and not salarios:
             raise ValidationError("Debe agregar al menos un concepto en alguna de las tablas.")
 
