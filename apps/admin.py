@@ -145,9 +145,10 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
 
     list_display = (
         'numero_de_H90',
-        "identificador_del_proveedor",
-        'mostrar_importe_total',
-        'fecha_del_modelo',
+        'mostrar_beneficiario',
+        'mostrar_importe',
+        'mostrar_fecha',
+        'mostrar_conceptos_pago',
     )
 
     list_filter = (
@@ -186,20 +187,58 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "importe_inversiones",
     )
 
+    # Métodos para renombrar columnas
+    def mostrar_beneficiario(self, obj):
+        return obj.identificador_del_proveedor
+    mostrar_beneficiario.short_description = "Beneficiario"
+    mostrar_beneficiario.admin_order_field = "identificador_del_proveedor__ident_del_prov"
+
+    def mostrar_fecha(self, obj):
+        return obj.fecha_del_modelo.strftime("%d/%m/%Y")
+    mostrar_fecha.short_description = "Fecha"
+    mostrar_fecha.admin_order_field = "fecha_del_modelo"
+
     # Métodos para mostrar importes formateados
-    def mostrar_importe_total(self, obj):
+    def mostrar_importe(self, obj):
         if obj.importe_total is not None:
             s = f"{float(obj.importe_total):,.2f}"
             return s.replace(",", " ").replace(".", ",")
         return "0,00"
-    mostrar_importe_total.short_description = "Importe Total"
+    mostrar_importe.short_description = "Importe"
+    mostrar_importe.admin_order_field = "importe_total"
 
-    def mostrar_importe_inversiones(self, obj):
-        if obj.importe_inversiones is not None:
-            s = f"{float(obj.importe_inversiones):,.2f}"
-            return s.replace(",", " ").replace(".", ",")
-        return "0,00"
-    mostrar_importe_inversiones.short_description = "Importe Inversiones"
+    def mostrar_conceptos_pago(self, obj):
+        partes = []
+
+        # Agrupar conceptos normales
+        normales = obj.conceptos_normales.all()
+        if normales.exists():
+            concepto = normales.first().concepto
+            numeros = [c.numero for c in normales if c.numero]
+            numeros_str = ", ".join(numeros) if numeros else ""
+            texto = concepto
+            if numeros_str:
+                texto += " " + numeros_str
+            partes.append(texto)
+
+        # Agrupar conceptos salario (mostrar todos los conceptos distintos)
+        salarios = obj.conceptos_salarios.all()
+        if salarios.exists():
+            conceptos_salarios = sorted(set(c.concepto for c in salarios))
+            texto = ", ".join(conceptos_salarios)
+            partes.append(texto)
+
+        # Unir conceptos
+        resultado = " | ".join(partes) if partes else "—"
+
+        # Agregar descripción solo una vez al final
+        if obj.descripcion:
+            resultado += f" | {obj.descripcion}"
+
+        return resultado
+
+    mostrar_conceptos_pago.short_description = "Conceptos de Pago"
+    mostrar_conceptos_pago.admin_order_field = "descripcion"
 
     # Contadores dinámicos para botones
     def changelist_view(self, request, extra_context=None):
