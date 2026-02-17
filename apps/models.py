@@ -140,17 +140,19 @@ class SolicitudesDePago(models.Model):
                 "fecha_del_modelo": "La fecha no puede ser futura. Solo se permiten hoy o fechas anteriores."
             })
 
-        # Validación de unicidad de H90 por forma de pago + año
+        # Validación de unicidad de H90 por forma de pago + año + cuenta de empresa
         año = fecha.year
         if self.numero_de_H90:
             existe = SolicitudesDePago.objects.filter(
                 forma_de_pago=self.forma_de_pago,
+                cuenta_de_empresa=self.cuenta_de_empresa,
                 fecha_del_modelo__year=año,
                 numero_de_H90=self.numero_de_H90
             ).exclude(pk=self.pk).exists()
             if existe:
                 raise ValidationError({
-                    "numero_de_H90": f"Ya existe un H90 con número {self.numero_de_H90} para {self.forma_de_pago} en {año}."
+                    "numero_de_H90": f"Ya existe un H90 con número {self.numero_de_H90} para "
+                     f"{self.forma_de_pago} - {self.cuenta_de_empresa} en {año}."
                 })
 
     def save(self, *args, **kwargs):
@@ -164,6 +166,7 @@ class SolicitudesDePago(models.Model):
         if not self.numero_de_H90:  # si el usuario no lo asigna manualmente
             ultimo = SolicitudesDePago.objects.filter(
                 forma_de_pago=self.forma_de_pago,
+                cuenta_de_empresa=self.cuenta_de_empresa,
                 fecha_del_modelo__year=año
             ).order_by('-numero_de_H90').first()
             self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1

@@ -273,12 +273,14 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         if obj.numero_de_H90:
             existe = SolicitudesDePago.objects.filter(
                 forma_de_pago=obj.forma_de_pago,
+                cuenta_de_empresa=obj.cuenta_de_empresa,
                 fecha_del_modelo__year=año,
                 numero_de_H90=obj.numero_de_H90
             ).exclude(pk=obj.pk).exists()
             if existe:
                 raise ValidationError(
-                    f"Ya existe un H90 con número {obj.numero_de_H90} para {obj.forma_de_pago} en {año}."
+                    f"Ya existe un H90 con número {obj.numero_de_H90} para "
+                    f"{obj.forma_de_pago} - {obj.cuenta_de_empresa} en {año}."
                 )
         super().save_model(request, obj, form, change)
 
@@ -312,11 +314,13 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
 
     def get_next_h90(self, request):
         forma = request.GET.get("forma")
+        cuenta = request.GET.get("cuenta")
         año = date.today().year
         if not forma:
             return JsonResponse({"numero": ""})
         ultimo = SolicitudesDePago.objects.filter(
             forma_de_pago=forma,
+            cuenta_de_empresa=cuenta,
             fecha_del_modelo__year=año
         ).order_by('-numero_de_H90').first()
         nuevo = ultimo.numero_de_H90 + 1 if ultimo else 1
