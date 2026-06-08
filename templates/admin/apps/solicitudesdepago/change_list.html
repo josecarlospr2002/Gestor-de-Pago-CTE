@@ -31,6 +31,26 @@
         </span>
     </a>
 
-
     {{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var filas = document.querySelectorAll("#result_list tbody tr");
+            filas.forEach(function(fila) {
+                var celdas = fila.querySelectorAll("td");
+                celdas.forEach(function(celda) {
+                    if (celda.textContent.includes("Cancelado")) {
+                        fila.setAttribute("style", "background-color: #e0e0e0 !important;");
+                        var enlaces = fila.querySelectorAll("a");
+                        enlaces.forEach(function(enlace) {
+                            enlace.style.color = "#424242";
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 {% endblock %}

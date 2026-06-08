@@ -1,0 +1,39 @@
+/* Estilo para la tabla de Solicitudes de Pago */
+body.model-solicitudesdepago #result_list tr {
+  background-color: #f6fa8b !important;
+}
+
+/* Estilo para la tabla de Proveedores */
+body.model-proveedores #result_list tr {
+  background-color: #ffffff !important;
+}
+
+/* Solicitudes de pago: enlaces en negro */
+body.model-solicitudesdepago #result_list td a {
+  color: #000000 !important;
+  text-decoration: none;
+}
+body.model-solicitudesdepago #result_list td a:hover {
+  color: #333333 !important;
+  text-decoration: underline;
+}
+
+/* Encabezados de la tabla de solicitudes de pago */
+body.model-solicitudesdepago #result_list thead th {
+  color: #000000 !important;
+  background-color: #fffde7;
+}
+
+body.model-solicitudesdepago #result_list thead th:hover {
+  color: #333333 !important;
+}
+
+/* Proveedores: enlaces en negro */
+body.model-proveedores #result_list td a {
+  color: #000000 !important;
+  text-decoration: none;
+}
+body.model-proveedores #result_list td a:hover {
+  color: #333333 !important;
+  text-decoration: underline;
+}

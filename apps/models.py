@@ -92,6 +92,12 @@ class SolicitudesDePago(models.Model):
         help_text="Opcional: escriba cualquier detalle adicional sobre la solicitud."
     )
 
+    cancelado = models.BooleanField(
+        default=False,
+        verbose_name="Cancelado",
+        help_text="Marque este campo para cancelar la solicitud de pago. Una vez cancelada, no podrá ser modificada."
+    )
+
     @property
     def importe_total_letras(self):
         if self.importe_total is None:

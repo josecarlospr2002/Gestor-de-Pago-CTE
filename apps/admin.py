@@ -8,8 +8,6 @@ from django.db.models import Sum
 from datetime import date
 from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario
 
-
-# Formulario personalizado para SolicitudesDePago
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
         model = SolicitudesDePago
@@ -37,7 +35,7 @@ class SolicitudesDePagoForm(forms.ModelForm):
         }
 
 
-# Filtro personalizado por Año
+# Filtro por Año
 class AñoFilter(admin.SimpleListFilter):
     title = 'Año'
     parameter_name = 'año'
@@ -52,7 +50,7 @@ class AñoFilter(admin.SimpleListFilter):
         return queryset
 
 
-# Filtro personalizado por Mes
+# Filtro por Mes
 class MesFilter(admin.SimpleListFilter):
     title = 'Mes'
     parameter_name = 'mes'
@@ -149,6 +147,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'mostrar_importe',
         'mostrar_fecha',
         'mostrar_conceptos_pago',
+        'mostrar_estado',
     )
 
     list_filter = (
@@ -175,6 +174,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "inversiones",
         "importe_inversiones",
         "descripcion",
+        "cancelado",
     )
 
     readonly_fields = (
@@ -186,6 +186,27 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "importe_total_letras",
         "importe_inversiones",
     )
+
+    def mostrar_estado(self, obj):
+        if obj.cancelado:
+            return "❌ Cancelado"
+        return "✅ Activo"
+    mostrar_estado.short_description = "Estado"
+    mostrar_estado.admin_order_field = "cancelado"
+
+    # Método para ambiar de color las filas canceladas
+    def get_row_class(self, obj):
+        if obj.cancelado:
+            return 'cancelado'
+        return ''
+
+    # Método para hacer readonly cuando está cancelado
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.cancelado:
+            campos = [field.name for field in self.model._meta.fields]
+            campos.append('importe_total_letras')
+            return campos
+        return self.readonly_fields
 
     # Métodos para renombrar columnas
     def mostrar_beneficiario(self, obj):
@@ -267,7 +288,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         response.context_data.update(extra_context)
         return response
 
-    # resto de métodos
     def save_model(self, request, obj, form, change):
         año = obj.fecha_del_modelo.year
         if obj.numero_de_H90:
@@ -335,3 +355,17 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             "direccion": proveedor.direccion,
         }
         return JsonResponse(data)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        obj = self.get_object(request, object_id)
+        if obj and obj.cancelado:
+            extra_context['show_save'] = False
+            extra_context['show_save_and_continue'] = False
+            extra_context['show_save_and_add_another'] = False
+            extra_context['show_delete_link'] = False
+            extra_context['show_close'] = True
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
