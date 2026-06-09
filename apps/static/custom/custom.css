@@ -1,6 +1,6 @@
 /* Estilo para la tabla de Solicitudes de Pago */
 body.model-solicitudesdepago #result_list tr {
-  background-color: #f6fa8b !important;
+  background-color: #ffb300 !important;
 }
 
 /* Estilo para la tabla de Proveedores */

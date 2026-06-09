@@ -169,15 +169,31 @@ class SolicitudesDePago(models.Model):
             self.direccion_proveedor = self.identificador_del_proveedor.direccion
 
         año = self.fecha_del_modelo.year
-        if not self.numero_de_H90:  # si el usuario no lo asigna manualmente
-            ultimo = SolicitudesDePago.objects.filter(
-                forma_de_pago=self.forma_de_pago,
-                cuenta_de_empresa=self.cuenta_de_empresa,
-                fecha_del_modelo__year=año
-            ).order_by('-numero_de_H90').first()
-            self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
 
-        # Lógica de inversiones
+        if self.pk:
+            original = SolicitudesDePago.objects.get(pk=self.pk)
+            cambiaron_datos = (
+                    original.forma_de_pago != self.forma_de_pago or
+                    original.cuenta_de_empresa != self.cuenta_de_empresa or
+                    original.fecha_del_modelo.year != año
+            )
+            if cambiaron_datos:
+                if self.numero_de_H90 == original.numero_de_H90:
+                    ultimo = SolicitudesDePago.objects.filter(
+                        forma_de_pago=self.forma_de_pago,
+                        cuenta_de_empresa=self.cuenta_de_empresa,
+                        fecha_del_modelo__year=año
+                    ).exclude(pk=self.pk).order_by('-numero_de_H90').first()
+                    self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
+        else:
+            if not self.numero_de_H90:
+                ultimo = SolicitudesDePago.objects.filter(
+                    forma_de_pago=self.forma_de_pago,
+                    cuenta_de_empresa=self.cuenta_de_empresa,
+                    fecha_del_modelo__year=año
+                ).order_by('-numero_de_H90').first()
+                self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
+
         if self.inversiones:
             self.importe_inversiones = self.importe_total
         else:
