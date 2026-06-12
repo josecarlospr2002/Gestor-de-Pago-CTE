@@ -1,6 +1,6 @@
 /* Estilo para la tabla de Solicitudes de Pago */
 body.model-solicitudesdepago #result_list tr {
-  background-color: #ffb300 !important;
+  background-color: #f5b92e;
 }
 
 /* Estilo para la tabla de Proveedores */
@@ -36,4 +36,38 @@ body.model-proveedores #result_list td a {
 body.model-proveedores #result_list td a:hover {
   color: #333333 !important;
   text-decoration: underline;
+}
+
+/* Filas canceladas: fondo gris */
+body.model-solicitudesdepago #result_list tr.cancelado {
+    background-color: #e0e0e0 !important;
+}
+
+body.model-solicitudesdepago #result_list tr.cancelado td a {
+    color: #616161 !important;
+    text-decoration: none;
+}
+body.model-solicitudesdepago #result_list tr.cancelado td a:hover {
+    color: #424242 !important;
+    text-decoration: underline;
+}
+
+/* Quitar color azul del número H90 */
+body.model-solicitudesdepago #result_list td.field-numero_de_H90 a {
+    color: #000000 !important;
+}
+
+/* Columna Estado sin color azul */
+body.model-solicitudesdepago #result_list td.field-mostrar_estado {
+    color: inherit !important;
+}
+
+/* Filas emitidas: fondo blanco */
+body.model-solicitudesdepago #result_list tr.emitido {
+    background-color: #ffffff !important;
+}
+
+body.model-solicitudesdepago #result_list tr.emitido td a {
+    color: #000000 !important;
+    text-decoration: none;
 }

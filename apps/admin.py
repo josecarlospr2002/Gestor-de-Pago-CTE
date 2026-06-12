@@ -6,7 +6,8 @@ from django.http import JsonResponse
 from django.forms.models import BaseInlineFormSet
 from django.db.models import Sum
 from datetime import date
-from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario
+from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas
+from django.utils.html import format_html
 
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
@@ -135,6 +136,11 @@ class ProveedoresAdmin(admin.ModelAdmin):
     mostrar_beneficiario.short_description = "Beneficiario:"
     mostrar_beneficiario.admin_order_field = "ident_del_prov"
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['show_history'] = False
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
 
 @admin.register(SolicitudesDePago)
 class SolicitudesDePagoAdmin(admin.ModelAdmin):
@@ -155,6 +161,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         'forma_de_pago',
         MesFilter,
         AñoFilter,
+        'estado',
     )
 
     list_display_links = list(list_display).copy()
@@ -174,7 +181,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "inversiones",
         "importe_inversiones",
         "descripcion",
-        "cancelado",
+        "estado",
     )
 
     readonly_fields = (
@@ -188,21 +195,26 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     )
 
     def mostrar_estado(self, obj):
-        if obj.cancelado:
-            return "❌ Cancelado"
-        return "✅ Activo"
-    mostrar_estado.short_description = "Estado"
-    mostrar_estado.admin_order_field = "cancelado"
+        if obj.estado == "Cancelado":
+            return format_html('<span style="display:none;">Cancelado</span>Cancelado')
+        elif obj.estado == "Emitido":
+            return format_html('<span style="display:none;">Emitido</span>Emitido')
+        return format_html('<span style="display:none;">Activo</span>Activo')
 
-    # Método para ambiar de color las filas canceladas
+    mostrar_estado.short_description = "Estado"
+    mostrar_estado.admin_order_field = "estado"
+
+    # Método para cambiar de color las filas
     def get_row_class(self, obj):
-        if obj.cancelado:
+        if obj.estado == "Cancelado":
             return 'cancelado'
+        elif obj.estado == "Emitido":
+            return 'emitido'
         return ''
 
-    # Método para hacer readonly cuando está cancelado
+    # Método para hacer readonly cuando está cancelado o emitido
     def get_readonly_fields(self, request, obj=None):
-        if obj and obj.cancelado:
+        if obj and obj.estado in ("Cancelado", "Emitido"):
             campos = [field.name for field in self.model._meta.fields]
             campos.append('importe_total_letras')
             return campos
@@ -231,7 +243,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     def mostrar_conceptos_pago(self, obj):
         partes = []
 
-        # Agrupar conceptos normales
         normales = obj.conceptos_normales.all()
         if normales.exists():
             concepto = normales.first().concepto
@@ -242,17 +253,14 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
                 texto += " " + numeros_str
             partes.append(texto)
 
-        # Agrupar conceptos salario (mostrar todos los conceptos distintos)
         salarios = obj.conceptos_salarios.all()
         if salarios.exists():
             conceptos_salarios = sorted(set(c.concepto for c in salarios))
             texto = ", ".join(conceptos_salarios)
             partes.append(texto)
 
-        # Unir conceptos
         resultado = " | ".join(partes) if partes else "—"
 
-        # Agregar descripción solo una vez al final
         if obj.descripcion:
             resultado += f" | {obj.descripcion}"
 
@@ -312,8 +320,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             raise ValidationError("No puede dejar llenas ni vacías ambas tablas. Solo una puede contener datos.")
         if not normales and not salarios:
             raise ValidationError("No puede dejar llenas ni vacías ambas tablas. Solo una puede contener datos.")
-        if not normales and not salarios:
-            raise ValidationError("Debe agregar al menos un concepto en alguna de las tablas.")
 
         super().save_related(request, form, formsets, change)
 
@@ -335,9 +341,13 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     def get_next_h90(self, request):
         forma = request.GET.get("forma")
         cuenta = request.GET.get("cuenta")
-        año = date.today().year
-        if not forma:
+        fecha = request.GET.get("fecha")
+        if not forma or not fecha:
             return JsonResponse({"numero": ""})
+
+        from datetime import datetime
+        año = datetime.strptime(fecha, "%Y-%m-%d").year
+
         ultimo = SolicitudesDePago.objects.filter(
             forma_de_pago=forma,
             cuenta_de_empresa=cuenta,
@@ -362,10 +372,25 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
         obj = self.get_object(request, object_id)
-        if obj and obj.cancelado:
+        extra_context['show_history'] = False
+        if obj and obj.estado in ("Cancelado", "Emitido"):
             extra_context['show_save'] = False
             extra_context['show_save_and_continue'] = False
             extra_context['show_save_and_add_another'] = False
             extra_context['show_delete_link'] = False
             extra_context['show_close'] = True
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+
+@admin.register(OperacionesEmitidas)
+class OperacionesEmitidasAdmin(admin.ModelAdmin):
+    list_display = (
+        'numero_operacion',
+        'solicitud',
+        'fecha_emision',
+        'estado',
+        'importe_emitido',
+    )
+    list_filter = ('estado', 'fecha_emision')
+    search_fields = ('numero_operacion', 'solicitud__numero_de_H90')
+    date_hierarchy = 'fecha_emision'

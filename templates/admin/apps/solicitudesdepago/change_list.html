@@ -43,10 +43,16 @@
                 var celdas = fila.querySelectorAll("td");
                 celdas.forEach(function(celda) {
                     if (celda.textContent.includes("Cancelado")) {
-                        fila.setAttribute("style", "background-color: #e0e0e0 !important;");
+                        fila.style.setProperty("background-color", "#e0e0e0", "important");
                         var enlaces = fila.querySelectorAll("a");
                         enlaces.forEach(function(enlace) {
-                            enlace.style.color = "#424242";
+                            enlace.style.setProperty("color", "#424242", "important");
+                        });
+                    } else if (celda.textContent.includes("Emitido")) {
+                        fila.style.setProperty("background-color", "#ffffff", "important");
+                        var enlaces = fila.querySelectorAll("a");
+                        enlaces.forEach(function(enlace) {
+                            enlace.style.setProperty("color", "#000000", "important");
                         });
                     }
                 });

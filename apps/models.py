@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from num2words import num2words
 import datetime
-
+from datetime import date
 
 class Proveedores(models.Model):
     ident_del_prov = models.CharField(max_length=255, verbose_name="Identificador del Prov:")
@@ -92,10 +92,15 @@ class SolicitudesDePago(models.Model):
         help_text="Opcional: escriba cualquier detalle adicional sobre la solicitud."
     )
 
-    cancelado = models.BooleanField(
-        default=False,
-        verbose_name="Cancelado",
-        help_text="Marque este campo para cancelar la solicitud de pago. Una vez cancelada, no podrá ser modificada."
+    estado = models.CharField(
+        max_length=20,
+        choices=(
+            ("Activo", "Activo"),
+            ("Cancelado", "Cancelado"),
+            ("Emitido", "Emitido"),
+        ),
+        default="Activo",
+        verbose_name="Estado",
     )
 
     @property
@@ -136,7 +141,6 @@ class SolicitudesDePago(models.Model):
         super().clean()
         hoy = timezone.now().date()
 
-        # Asegurar que fecha_del_modelo sea un date
         fecha = self.fecha_del_modelo
         if isinstance(fecha, datetime.datetime):
             fecha = fecha.date()
@@ -193,6 +197,18 @@ class SolicitudesDePago(models.Model):
                     fecha_del_modelo__year=año
                 ).order_by('-numero_de_H90').first()
                 self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
+
+        # Si cambia a Emitido, crear Operación Emitida
+        if self.pk and self.estado == "Emitido":
+            original = SolicitudesDePago.objects.get(pk=self.pk)
+            if original.estado != "Emitido":
+                OperacionesEmitidas.objects.create(
+                    solicitud=self,
+                    fecha_emision=date.today(),
+                    numero_operacion=f"H90-{self.numero_de_H90}",
+                    estado="Emitido",
+                    importe_emitido=self.importe_total,
+                )
 
         if self.inversiones:
             self.importe_inversiones = self.importe_total
@@ -286,3 +302,50 @@ class ConceptoSalario(models.Model):
 
     def __str__(self):
         return f"{self.concepto} - {self.importe}"
+
+
+class OperacionesEmitidas(models.Model):
+    solicitud = models.ForeignKey(
+        SolicitudesDePago,
+        on_delete=models.CASCADE,
+        related_name="operaciones_emitidas",
+        verbose_name="Solicitud de Pago"
+    )
+    fecha_emision = models.DateField(
+        verbose_name="Fecha de Emisión",
+        default=timezone.now
+    )
+    numero_operacion = models.CharField(
+        max_length=50,
+        verbose_name="Número de Operación",
+        unique=True
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=(
+            ("Emitido", "Emitido"),
+            ("Pendiente", "Pendiente"),
+            ("Rechazado", "Rechazado"),
+        ),
+        default="Emitido",
+        verbose_name="Estado"
+    )
+    importe_emitido = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name="Importe Emitido"
+    )
+    observaciones = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Observaciones"
+    )
+
+    class Meta:
+        verbose_name = "Operación Emitida"
+        verbose_name_plural = "Operaciones Emitidas"
+        ordering = ("-fecha_emision",)
+
+    def __str__(self):
+        return f"Op. {self.numero_operacion} - {self.solicitud}"
