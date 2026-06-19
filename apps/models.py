@@ -96,12 +96,16 @@ class SolicitudesDePago(models.Model):
         max_length=20,
         choices=(
             ("Activo", "Activo"),
-            ("Cancelado", "Cancelado"),
             ("Emitido", "Emitido"),
+            ("Cancelado", "Cancelado"),
         ),
         default="Activo",
         verbose_name="Estado",
     )
+    
+    class Meta:
+        verbose_name = "Solicitud de Pago"
+        verbose_name_plural = "Solicitudes de Pago"
 
     @property
     def importe_total_letras(self):
@@ -202,12 +206,14 @@ class SolicitudesDePago(models.Model):
         if self.pk and self.estado == "Emitido":
             original = SolicitudesDePago.objects.get(pk=self.pk)
             if original.estado != "Emitido":
-                OperacionesEmitidas.objects.create(
+                OperacionesEmitidas.objects.get_or_create(
                     solicitud=self,
-                    fecha_emision=date.today(),
-                    numero_operacion=f"H90-{self.numero_de_H90}",
-                    estado="Emitido",
-                    importe_emitido=self.importe_total,
+                    defaults={
+                        "fecha_emision": date.today(),
+                        "numero_operacion": f"H90-{self.numero_de_H90}",
+                        "estado": "Emitido",
+                        "importe_emitido": self.importe_total,
+                    }
                 )
 
         if self.inversiones:

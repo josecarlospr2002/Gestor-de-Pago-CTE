@@ -35,6 +35,21 @@ class SolicitudesDePagoForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        if not instance or not instance.pk:
+            # CREANDO: solo mostrar "Activo"
+            self.fields['estado'].choices = [("Activo", "Activo")]
+        else:
+            # EDITANDO: mostrar todos si aún está Activo
+            if instance.estado == "Activo":
+                self.fields['estado'].choices = [
+                    ("Activo", "Activo"),
+                    ("Emitido", "Emitido"),
+                    ("Cancelado", "Cancelado"),
+                ]
+
 
 # Filtro por Año
 class AñoFilter(admin.SimpleListFilter):
