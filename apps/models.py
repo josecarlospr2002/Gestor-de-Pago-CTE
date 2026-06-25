@@ -102,7 +102,7 @@ class SolicitudesDePago(models.Model):
         default="Activo",
         verbose_name="Estado",
     )
-    
+
     class Meta:
         verbose_name = "Solicitud de Pago"
         verbose_name_plural = "Solicitudes de Pago"
@@ -166,7 +166,7 @@ class SolicitudesDePago(models.Model):
             if existe:
                 raise ValidationError({
                     "numero_de_H90": f"Ya existe un H90 con número {self.numero_de_H90} para "
-                     f"{self.forma_de_pago} - {self.cuenta_de_empresa} en {año}."
+                                     f"{self.forma_de_pago} - {self.cuenta_de_empresa} en {año}."
                 })
 
     def save(self, *args, **kwargs):
@@ -202,7 +202,7 @@ class SolicitudesDePago(models.Model):
                 ).order_by('-numero_de_H90').first()
                 self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
 
-        # Si cambia a Emitido, crear Operación Emitida
+        # Si cambia a Emitido, crear Operación Emitida con estado "Tránsito"
         if self.pk and self.estado == "Emitido":
             original = SolicitudesDePago.objects.get(pk=self.pk)
             if original.estado != "Emitido":
@@ -210,8 +210,8 @@ class SolicitudesDePago(models.Model):
                     solicitud=self,
                     defaults={
                         "fecha_emision": date.today(),
-                        "numero_operacion": f"H90-{self.numero_de_H90}",
-                        "estado": "Emitido",
+                        "numero_operacion": f"H90-{self.numero_de_H90}-{self.forma_de_pago}-{self.cuenta_de_empresa}-{self.fecha_del_modelo.year}",
+                        "estado": "Tránsito",
                         "importe_emitido": self.importe_total,
                     }
                 )
@@ -293,7 +293,7 @@ class ConceptoSalario(models.Model):
         related_name="conceptos_salarios"
     )
     concepto = models.CharField(max_length=30, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
-    numero = models.PositiveIntegerField(verbose_name="Número", null=True, blank=True)  # debe quedar vacío
+    numero = models.PositiveIntegerField(verbose_name="Número", null=True, blank=True)
     importe = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -324,16 +324,16 @@ class OperacionesEmitidas(models.Model):
     numero_operacion = models.CharField(
         max_length=50,
         verbose_name="Número de Operación",
-        unique=True
+        unique=False
     )
     estado = models.CharField(
         max_length=20,
         choices=(
-            ("Emitido", "Emitido"),
-            ("Pendiente", "Pendiente"),
-            ("Rechazado", "Rechazado"),
+            ("Tránsito", "Tránsito"),
+            ("Debitado", "Debitado"),
+            ("Cancelado", "Cancelado"),
         ),
-        default="Emitido",
+        default="Tránsito",
         verbose_name="Estado"
     )
     importe_emitido = models.DecimalField(
@@ -352,6 +352,19 @@ class OperacionesEmitidas(models.Model):
         verbose_name = "Operación Emitida"
         verbose_name_plural = "Operaciones Emitidas"
         ordering = ("-fecha_emision",)
+
+    def clean(self):
+        super().clean()
+        if self.pk:
+            original = OperacionesEmitidas.objects.get(pk=self.pk)
+            if original.estado == "Debitado" and self.estado == "Cancelado":
+                raise ValidationError({
+                    "estado": "Una operación Debitada no puede pasar a Cancelado. Solo puede volver a Tránsito."
+                })
+            if original.estado == "Cancelado" and self.estado == "Debitado":
+                raise ValidationError({
+                    "estado": "Una operación Cancelada no puede pasar a Debitado. Solo puede volver a Tránsito."
+                })
 
     def __str__(self):
         return f"Op. {self.numero_operacion} - {self.solicitud}"
