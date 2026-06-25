@@ -366,5 +366,18 @@ class OperacionesEmitidas(models.Model):
                     "estado": "Una operación Cancelada no puede pasar a Debitado. Solo puede volver a Tránsito."
                 })
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            original = OperacionesEmitidas.objects.get(pk=self.pk)
+            # Si cambia a Cancelado, cancelar también la solicitud
+            if original.estado != "Cancelado" and self.estado == "Cancelado":
+                self.solicitud.estado = "Cancelado"
+                self.solicitud.save()
+            # Si cambia a Tránsito desde Cancelado, volver a Emitido la solicitud
+            if original.estado == "Cancelado" and self.estado == "Tránsito":
+                self.solicitud.estado = "Emitido"
+                self.solicitud.save()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Op. {self.numero_operacion} - {self.solicitud}"

@@ -405,7 +405,21 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         'fecha_emision',
         'estado',
         'importe_emitido',
+        'mostrar_estado_operacion',
     )
     list_filter = ('estado', 'fecha_emision')
     search_fields = ('numero_operacion', 'solicitud__numero_de_H90')
     date_hierarchy = 'fecha_emision'
+
+    def mostrar_estado_operacion(self, obj):
+        if obj.estado == "Cancelado":
+            return format_html('<span style="display:none;">Cancelado</span>Cancelado')
+        elif obj.estado == "Debitado":
+            return format_html('<span style="display:none;">Debitado</span>Debitado')
+        return format_html('<span style="display:none;">Tránsito</span>Tránsito')
+    mostrar_estado_operacion.short_description = ""
+
+    def get_row_class(self, obj):
+        if obj.estado == "Cancelado":
+            return 'cancelado'
+        return ''
