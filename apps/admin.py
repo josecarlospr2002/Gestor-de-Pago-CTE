@@ -8,6 +8,7 @@ from django.db.models import Sum
 from datetime import date
 from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas
 from django.utils.html import format_html
+from django.shortcuts import render, redirect, get_object_or_404
 
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
@@ -39,10 +40,8 @@ class SolicitudesDePagoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         instance = kwargs.get('instance')
         if not instance or not instance.pk:
-            # CREANDO: solo mostrar "Activo"
             self.fields['estado'].choices = [("Activo", "Activo")]
         else:
-            # EDITANDO: mostrar todos si aún está Activo
             if instance.estado == "Activo":
                 self.fields['estado'].choices = [
                     ("Activo", "Activo"),
@@ -219,7 +218,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     mostrar_estado.short_description = "Estado"
     mostrar_estado.admin_order_field = "estado"
 
-    # Método para cambiar de color las filas
     def get_row_class(self, obj):
         if obj.estado == "Cancelado":
             return 'cancelado'
@@ -227,7 +225,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             return 'emitido'
         return ''
 
-    # Método para hacer readonly cuando está cancelado o emitido
     def get_readonly_fields(self, request, obj=None):
         if obj and obj.estado in ("Cancelado", "Emitido"):
             campos = [field.name for field in self.model._meta.fields]
@@ -235,7 +232,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             return campos
         return self.readonly_fields
 
-    # Métodos para renombrar columnas
     def mostrar_beneficiario(self, obj):
         return obj.identificador_del_proveedor
     mostrar_beneficiario.short_description = "Beneficiario"
@@ -246,7 +242,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     mostrar_fecha.short_description = "Fecha"
     mostrar_fecha.admin_order_field = "fecha_del_modelo"
 
-    # Métodos para mostrar importes formateados
     def mostrar_importe(self, obj):
         if obj.importe_total is not None:
             s = f"{float(obj.importe_total):,.2f}"
@@ -257,7 +252,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
 
     def mostrar_conceptos_pago(self, obj):
         partes = []
-
         normales = obj.conceptos_normales.all()
         if normales.exists():
             concepto = normales.first().concepto
@@ -267,47 +261,37 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             if numeros_str:
                 texto += " " + numeros_str
             partes.append(texto)
-
         salarios = obj.conceptos_salarios.all()
         if salarios.exists():
             conceptos_salarios = sorted(set(c.concepto for c in salarios))
             texto = ", ".join(conceptos_salarios)
             partes.append(texto)
-
         resultado = " | ".join(partes) if partes else "—"
-
         if obj.descripcion:
             resultado += f" | {obj.descripcion}"
-
         return resultado
 
     mostrar_conceptos_pago.short_description = "Conceptos de Pago"
     mostrar_conceptos_pago.admin_order_field = "descripcion"
 
-    # Contadores dinámicos para botones
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
         response = super().changelist_view(request, extra_context=extra_context)
-
         try:
             queryset = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-
         cantidad_pagos = queryset.count()
         importe_total = queryset.aggregate(total=Sum('importe_total'))['total'] or 0
         importe_inversiones = queryset.aggregate(total=Sum('importe_inversiones'))['total'] or 0
-
         def formato(valor):
             if valor is not None:
                 s = f"{float(valor):,.2f}"
                 return s.replace(",", " ").replace(".", ",")
             return "0,00"
-
         extra_context['cantidad_pagos'] = cantidad_pagos
         extra_context['importe_total_display'] = formato(importe_total)
         extra_context['importe_inversiones_display'] = formato(importe_inversiones)
-
         response.context_data.update(extra_context)
         return response
 
@@ -330,14 +314,11 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         normales = any(getattr(fs, "has_normales", False) for fs in formsets)
         salarios = any(getattr(fs, "has_salarios", False) for fs in formsets)
-
         if normales and salarios:
             raise ValidationError("No puede dejar llenas ni vacías ambas tablas. Solo una puede contener datos.")
         if not normales and not salarios:
             raise ValidationError("No puede dejar llenas ni vacías ambas tablas. Solo una puede contener datos.")
-
         super().save_related(request, form, formsets, change)
-
         obj = form.instance
         total, mensaje = obj.calcular_importe_total()
         obj.importe_total = total
@@ -345,13 +326,53 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         if mensaje:
             messages.warning(request, mensaje)
 
+    def response_change(self, request, obj):
+        """Intercepta después de guardar. Si cambió a Emitido, redirige al modal."""
+        if obj.estado == "Emitido" and not hasattr(obj, '_operacion_creada'):
+            return redirect('admin:solicitudesdepago_emitir', pk=obj.pk)
+        return super().response_change(request, obj)
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path("get-next-h90/", self.admin_site.admin_view(self.get_next_h90), name="solicitudesdepago_get_next_h90"),
             path("get-proveedor/<int:pk>/", self.admin_site.admin_view(self.get_proveedor), name="solicitudesdepago_get_proveedor"),
+            path("emitir-h90/<int:pk>/", self.admin_site.admin_view(self.emitir_h90), name="solicitudesdepago_emitir"),
         ]
         return custom_urls + urls
+
+    def emitir_h90(self, request, pk):
+        solicitud = get_object_or_404(SolicitudesDePago, pk=pk)
+
+        if request.method == "POST":
+            numero_serie = request.POST.get("numero_serie")
+            fecha_inicial = request.POST.get("fecha_inicial")
+
+            if not numero_serie or not fecha_inicial:
+                messages.error(request, "Debe completar Número de Serie y Fecha Inicial.")
+                return redirect('admin:apps_solicitudesdepago_change', pk)
+
+            solicitud.estado = "Emitido"
+            solicitud._operacion_creada = True
+            solicitud.save()
+
+            OperacionesEmitidas.objects.create(
+                solicitud=solicitud,
+                fecha_emision=date.today(),
+                numero_operacion=f"H90-{solicitud.numero_de_H90}-{solicitud.forma_de_pago}-{solicitud.cuenta_de_empresa}-{solicitud.fecha_del_modelo.year}",
+                estado="Tránsito",
+                importe_emitido=solicitud.importe_total,
+                numero_serie=numero_serie,
+                fecha_inicial=fecha_inicial,
+            )
+
+            messages.success(request, f"H90 N° {solicitud.numero_de_H90} emitido correctamente.")
+            return redirect('admin:apps_solicitudesdepago_changelist')
+
+        return render(request, 'admin/apps/solicitudesdepago/emitir_modal.html', {
+            'solicitud': solicitud,
+            'opts': self.model._meta,
+        })
 
     def get_next_h90(self, request):
         forma = request.GET.get("forma")
@@ -359,10 +380,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         fecha = request.GET.get("fecha")
         if not forma or not fecha:
             return JsonResponse({"numero": ""})
-
         from datetime import datetime
         año = datetime.strptime(fecha, "%Y-%m-%d").year
-
         ultimo = SolicitudesDePago.objects.filter(
             forma_de_pago=forma,
             cuenta_de_empresa=cuenta,

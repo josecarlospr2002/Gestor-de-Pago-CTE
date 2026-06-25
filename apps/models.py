@@ -202,20 +202,6 @@ class SolicitudesDePago(models.Model):
                 ).order_by('-numero_de_H90').first()
                 self.numero_de_H90 = (ultimo.numero_de_H90 + 1) if ultimo else 1
 
-        # Si cambia a Emitido, crear Operación Emitida con estado "Tránsito"
-        if self.pk and self.estado == "Emitido":
-            original = SolicitudesDePago.objects.get(pk=self.pk)
-            if original.estado != "Emitido":
-                OperacionesEmitidas.objects.get_or_create(
-                    solicitud=self,
-                    defaults={
-                        "fecha_emision": date.today(),
-                        "numero_operacion": f"H90-{self.numero_de_H90}-{self.forma_de_pago}-{self.cuenta_de_empresa}-{self.fecha_del_modelo.year}",
-                        "estado": "Tránsito",
-                        "importe_emitido": self.importe_total,
-                    }
-                )
-
         if self.inversiones:
             self.importe_inversiones = self.importe_total
         else:
@@ -342,6 +328,23 @@ class OperacionesEmitidas(models.Model):
         validators=[MinValueValidator(0)],
         verbose_name="Importe Emitido"
     )
+    numero_serie = models.CharField(
+        max_length=7,
+        verbose_name="Número de Serie",
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex=r'^\d{7}$',
+                message="El Número de Serie debe contener exactamente 7 dígitos numéricos."
+            )
+        ]
+    )
+    fecha_inicial = models.DateField(
+        verbose_name="Fecha Inicial",
+        null=False,
+        blank=False
+    )
     observaciones = models.TextField(
         blank=True,
         null=True,
@@ -369,11 +372,9 @@ class OperacionesEmitidas(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
-            # Si cambia a Cancelado, cancelar también la solicitud
             if original.estado != "Cancelado" and self.estado == "Cancelado":
                 self.solicitud.estado = "Cancelado"
                 self.solicitud.save()
-            # Si cambia a Tránsito desde Cancelado, volver a Emitido la solicitud
             if original.estado == "Cancelado" and self.estado == "Tránsito":
                 self.solicitud.estado = "Emitido"
                 self.solicitud.save()
