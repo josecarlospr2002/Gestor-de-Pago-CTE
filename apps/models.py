@@ -345,6 +345,11 @@ class OperacionesEmitidas(models.Model):
         null=False,
         blank=False
     )
+    fecha_final = models.DateField(
+        verbose_name="Fecha Final",
+        null=True,
+        blank=True
+    )
     observaciones = models.TextField(
         blank=True,
         null=True,
@@ -358,6 +363,11 @@ class OperacionesEmitidas(models.Model):
 
     def clean(self):
         super().clean()
+
+        # Rellenar fecha_final automáticamente si está vacía
+        if self.estado in ("Debitado", "Cancelado") and not self.fecha_final:
+            self.fecha_final = date.today()
+
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
             if original.estado == "Debitado" and self.estado == "Cancelado":
@@ -372,12 +382,19 @@ class OperacionesEmitidas(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
+
+            # Si vuelve a Tránsito, limpiar fecha_final
+            if original.estado in ("Debitado", "Cancelado") and self.estado == "Tránsito":
+                self.fecha_final = None
+
+            # Sincronizar con solicitud
             if original.estado != "Cancelado" and self.estado == "Cancelado":
                 self.solicitud.estado = "Cancelado"
                 self.solicitud.save()
             if original.estado == "Cancelado" and self.estado == "Tránsito":
                 self.solicitud.estado = "Emitido"
                 self.solicitud.save()
+
         super().save(*args, **kwargs)
 
     def __str__(self):

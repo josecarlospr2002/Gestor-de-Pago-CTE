@@ -424,6 +424,7 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         'fecha_emision',
         'estado',
         'importe_emitido',
+        'fecha_final',
         'mostrar_estado_operacion',
     )
     list_filter = ('estado', 'fecha_emision')
@@ -442,3 +443,6 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         if obj.estado == "Cancelado":
             return 'cancelado'
         return ''
+
+    class Media:
+        js = ('js/operaciones_fecha_final.js',)
