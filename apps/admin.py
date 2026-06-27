@@ -50,7 +50,7 @@ class SolicitudesDePagoForm(forms.ModelForm):
                 ]
 
 
-# Filtro por Año
+# Filtro por Año (Solicitudes)
 class AñoFilter(admin.SimpleListFilter):
     title = 'Año'
     parameter_name = 'año'
@@ -65,7 +65,7 @@ class AñoFilter(admin.SimpleListFilter):
         return queryset
 
 
-# Filtro por Mes
+# Filtro por Mes (Solicitudes)
 class MesFilter(admin.SimpleListFilter):
     title = 'Mes'
     parameter_name = 'mes'
@@ -81,6 +81,62 @@ class MesFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(fecha_del_modelo__month=self.value())
+        return queryset
+
+
+# Filtro por Año (Operaciones Emitidas)
+class AñoFilterOE(admin.SimpleListFilter):
+    title = 'Año'
+    parameter_name = 'año'
+
+    def lookups(self, request, model_admin):
+        años = OperacionesEmitidas.objects.dates('fecha_inicial', 'year')
+        return [(a.year, a.year) for a in años]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha_inicial__year=self.value())
+        return queryset
+
+
+# Filtro por Mes (Operaciones Emitidas)
+class MesFilterOE(admin.SimpleListFilter):
+    title = 'Mes'
+    parameter_name = 'mes'
+
+    def lookups(self, request, model_admin):
+        meses = [
+            (1, "Enero"), (2, "Febrero"), (3, "Marzo"), (4, "Abril"),
+            (5, "Mayo"), (6, "Junio"), (7, "Julio"), (8, "Agosto"),
+            (9, "Septiembre"), (10, "Octubre"), (11, "Noviembre"), (12, "Diciembre"),
+        ]
+        return meses
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha_inicial__month=self.value())
+        return queryset
+
+
+# Filtro por Tipo de Operación
+class TipoOperacionFilter(admin.SimpleListFilter):
+    title = 'Tipo de Operación'
+    parameter_name = 'tipo_operacion'
+
+    def lookups(self, request, model_admin):
+        return [
+            ("Cheques", "Cheques"),
+            ("Transferencias", "Transferencias"),
+            ("Inversiones", "Inversiones"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "Cheques":
+            return queryset.filter(solicitud__forma_de_pago="Cheque")
+        if self.value() == "Transferencias":
+            return queryset.filter(solicitud__forma_de_pago="Transferencia")
+        if self.value() == "Inversiones":
+            return queryset.filter(solicitud__inversiones=True)
         return queryset
 
 
@@ -327,7 +383,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             messages.warning(request, mensaje)
 
     def response_change(self, request, obj):
-        """Intercepta después de guardar. Si cambió a Emitido, redirige al modal."""
         if obj.estado == "Emitido" and not hasattr(obj, '_operacion_creada'):
             return redirect('admin:solicitudesdepago_emitir', pk=obj.pk)
         return super().response_change(request, obj)
@@ -419,17 +474,79 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
 @admin.register(OperacionesEmitidas)
 class OperacionesEmitidasAdmin(admin.ModelAdmin):
     list_display = (
-        'numero_operacion',
-        'solicitud',
-        'fecha_emision',
-        'estado',
+        'mostrar_h90',
+        'mostrar_no_cheque',
+        'fecha_inicial_formateada',
         'importe_emitido',
-        'fecha_final',
+        'estado',
+        'fecha_final_formateada',
+        'mostrar_concepto',
+        'mostrar_suministrador',
         'mostrar_estado_operacion',
     )
-    list_filter = ('estado', 'fecha_emision')
-    search_fields = ('numero_operacion', 'solicitud__numero_de_H90')
-    date_hierarchy = 'fecha_emision'
+    list_display_links = list(list_display).copy()
+    list_filter = (
+        'solicitud__cuenta_de_empresa',
+        TipoOperacionFilter,
+        MesFilterOE,
+        AñoFilterOE,
+        'estado',
+    )
+    search_fields = ()
+
+    class Media:
+        js = ('js/operaciones_fecha_final.js',)
+
+    def mostrar_h90(self, obj):
+        return obj.solicitud.numero_de_H90
+    mostrar_h90.short_description = "H90"
+    mostrar_h90.admin_order_field = "solicitud__numero_de_H90"
+
+    def mostrar_no_cheque(self, obj):
+        return obj.numero_serie
+    mostrar_no_cheque.short_description = "No. Cheque"
+    mostrar_no_cheque.admin_order_field = "numero_serie"
+
+    def fecha_inicial_formateada(self, obj):
+        return obj.fecha_inicial.strftime("%d/%m/%Y")
+    fecha_inicial_formateada.short_description = "Fecha Inicial"
+    fecha_inicial_formateada.admin_order_field = "fecha_inicial"
+
+    def fecha_final_formateada(self, obj):
+        if obj.fecha_final:
+            return obj.fecha_final.strftime("%d/%m/%Y")
+        return "—"
+    fecha_final_formateada.short_description = "Fecha Final"
+    fecha_final_formateada.admin_order_field = "fecha_final"
+
+    def mostrar_concepto(self, obj):
+        solicitud = obj.solicitud
+        partes = []
+        normales = solicitud.conceptos_normales.all()
+        if normales.exists():
+            concepto = normales.first().concepto
+            numeros = [c.numero for c in normales if c.numero]
+            numeros_str = ", ".join(numeros) if numeros else ""
+            texto = concepto
+            if numeros_str:
+                texto += " " + numeros_str
+            partes.append(texto)
+        salarios = solicitud.conceptos_salarios.all()
+        if salarios.exists():
+            conceptos_salarios = sorted(set(c.concepto for c in salarios))
+            texto = ", ".join(conceptos_salarios)
+            partes.append(texto)
+        resultado = " | ".join(partes) if partes else "—"
+        if solicitud.descripcion:
+            resultado += f" | {solicitud.descripcion}"
+        return resultado
+    mostrar_concepto.short_description = "Concepto"
+    mostrar_concepto.admin_order_field = "solicitud__descripcion"
+
+    def mostrar_suministrador(self, obj):
+        return obj.solicitud.identificador_del_proveedor
+    mostrar_suministrador.short_description = "Suministrador"
+    mostrar_suministrador.admin_order_field = "solicitud__identificador_del_proveedor__ident_del_prov"
 
     def mostrar_estado_operacion(self, obj):
         if obj.estado == "Cancelado":
@@ -443,6 +560,3 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         if obj.estado == "Cancelado":
             return 'cancelado'
         return ''
-
-    class Media:
-        js = ('js/operaciones_fecha_final.js',)

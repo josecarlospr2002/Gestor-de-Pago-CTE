@@ -109,3 +109,44 @@ body.model-operacionesemitidas #result_list tr.row2 {
 body.model-operacionesemitidas #result_list tr.cancelado {
     background-color: #e0e0e0 !important;
 }
+
+/* Enlaces en negro */
+body.model-operacionesemitidas #result_list td a {
+    color: #000000 !important;
+    text-decoration: none;
+}
+body.model-operacionesemitidas #result_list td a:hover {
+    color: #333333 !important;
+    text-decoration: underline;
+}
+
+/* Filas canceladas en gris */
+body.model-operacionesemitidas #result_list tr.cancelado {
+    background-color: #e0e0e0 !important;
+}
+
+body.model-operacionesemitidas #result_list tr.cancelado td a {
+    color: #616161 !important;
+    text-decoration: none;
+}
+body.model-operacionesemitidas #result_list tr.cancelado td a:hover {
+    color: #424242 !important;
+    text-decoration: underline;
+}
+
+/* Quitar alternancia de colores, todas blancas */
+body.model-operacionesemitidas #result_list tr {
+    background-color: #ffffff !important;
+}
+body.model-operacionesemitidas #result_list tr.row1,
+body.model-operacionesemitidas #result_list tr.row2 {
+    background-color: #ffffff !important;
+}
+
+/* Ocultar columna de estado */
+body.model-operacionesemitidas #result_list th.column-mostrar_estado_operacion {
+    display: none;
+}
+body.model-operacionesemitidas #result_list td.field-mostrar_estado_operacion {
+    display: none;
+}
