@@ -494,8 +494,59 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
     )
     search_fields = ()
 
+    fields = (
+        'mostrar_h90_display',
+        'fecha_inicial',
+        'numero_serie',
+        'estado',
+        'fecha_final',
+        'importe_emitido',
+        'mostrar_concepto_display',
+        'mostrar_suministrador_display',
+    )
+
+    readonly_fields = (
+        'mostrar_h90_display',
+        'fecha_inicial',
+        'numero_serie',
+        'importe_emitido',
+        'mostrar_concepto_display',
+        'mostrar_suministrador_display',
+    )
+
     class Media:
         js = ('js/operaciones_fecha_final.js',)
+
+    def mostrar_h90_display(self, obj):
+        return obj.solicitud.numero_de_H90
+    mostrar_h90_display.short_description = "H90"
+
+    def mostrar_concepto_display(self, obj):
+        solicitud = obj.solicitud
+        partes = []
+        normales = solicitud.conceptos_normales.all()
+        if normales.exists():
+            concepto = normales.first().concepto
+            numeros = [c.numero for c in normales if c.numero]
+            numeros_str = ", ".join(numeros) if numeros else ""
+            texto = concepto
+            if numeros_str:
+                texto += " " + numeros_str
+            partes.append(texto)
+        salarios = solicitud.conceptos_salarios.all()
+        if salarios.exists():
+            conceptos_salarios = sorted(set(c.concepto for c in salarios))
+            texto = ", ".join(conceptos_salarios)
+            partes.append(texto)
+        resultado = " | ".join(partes) if partes else "—"
+        if solicitud.descripcion:
+            resultado += f" | {solicitud.descripcion}"
+        return resultado
+    mostrar_concepto_display.short_description = "Concepto"
+
+    def mostrar_suministrador_display(self, obj):
+        return obj.solicitud.identificador_del_proveedor
+    mostrar_suministrador_display.short_description = "Suministrador"
 
     def mostrar_h90(self, obj):
         return obj.solicitud.numero_de_H90
@@ -560,3 +611,16 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         if obj.estado == "Cancelado":
             return 'cancelado'
         return ''
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['show_save_and_add_another'] = False
+        extra_context['show_save_and_continue'] = False
+        extra_context['show_history'] = False
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
