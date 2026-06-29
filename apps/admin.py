@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.forms.models import BaseInlineFormSet
 from django.db.models import Sum
 from datetime import date
-from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas
+from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas, Ingreso
 from django.utils.html import format_html
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -624,3 +624,80 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         extra_context['show_save_and_continue'] = False
         extra_context['show_history'] = False
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+
+# Filtro por Año (Ingresos)
+class AñoFilterIngreso(admin.SimpleListFilter):
+    title = 'Año'
+    parameter_name = 'año'
+
+    def lookups(self, request, model_admin):
+        años = Ingreso.objects.dates('fecha', 'year')
+        return [(a.year, a.year) for a in años]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha__year=self.value())
+        return queryset
+
+
+# Filtro por Mes (Ingresos)
+class MesFilterIngreso(admin.SimpleListFilter):
+    title = 'Mes'
+    parameter_name = 'mes'
+
+    def lookups(self, request, model_admin):
+        meses = [
+            (1, "Enero"), (2, "Febrero"), (3, "Marzo"), (4, "Abril"),
+            (5, "Mayo"), (6, "Junio"), (7, "Julio"), (8, "Agosto"),
+            (9, "Septiembre"), (10, "Octubre"), (11, "Noviembre"), (12, "Diciembre"),
+        ]
+        return meses
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha__month=self.value())
+        return queryset
+
+
+@admin.register(Ingreso)
+class IngresoAdmin(admin.ModelAdmin):
+    list_display = (
+        'tipo_ingreso',
+        'fecha_formateada',
+        'importe',
+        'fecha_debito_formateada',
+        'concepto',
+    )
+    list_filter = (
+        'cuenta_de_empresa',
+        'tipo_ingreso',
+        MesFilterIngreso,
+        AñoFilterIngreso,
+    )
+    search_fields = ()
+
+    fields = (
+        'cuenta_de_empresa',
+        'tipo_ingreso',
+        'fecha',
+        'importe',
+        'debitar',
+        'fecha_debito',
+        'concepto',
+    )
+
+    class Media:
+        js = ('js/ingreso_debitar.js',)
+
+    def fecha_formateada(self, obj):
+        return obj.fecha.strftime("%d/%m/%Y")
+    fecha_formateada.short_description = "Fecha / Fecha Depósito"
+    fecha_formateada.admin_order_field = "fecha"
+
+    def fecha_debito_formateada(self, obj):
+        if obj.fecha_debito:
+            return obj.fecha_debito.strftime("%d/%m/%Y")
+        return "—"
+    fecha_debito_formateada.short_description = "Fecha Debitó"
+    fecha_debito_formateada.admin_order_field = "fecha_debito"

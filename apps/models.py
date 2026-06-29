@@ -154,7 +154,6 @@ class SolicitudesDePago(models.Model):
                 "fecha_del_modelo": "La fecha no puede ser futura. Solo se permiten hoy o fechas anteriores."
             })
 
-        # Validación de unicidad de H90 por forma de pago + año + cuenta de empresa
         año = fecha.year
         if self.numero_de_H90:
             existe = SolicitudesDePago.objects.filter(
@@ -364,7 +363,6 @@ class OperacionesEmitidas(models.Model):
     def clean(self):
         super().clean()
 
-        # Rellenar fecha_final automáticamente si está vacía
         if self.estado in ("Debitado", "Cancelado") and not self.fecha_final:
             self.fecha_final = date.today()
 
@@ -383,11 +381,9 @@ class OperacionesEmitidas(models.Model):
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
 
-            # Si vuelve a Tránsito, limpiar fecha_final
             if original.estado in ("Debitado", "Cancelado") and self.estado == "Tránsito":
                 self.fecha_final = None
 
-            # Sincronizar con solicitud
             if original.estado != "Cancelado" and self.estado == "Cancelado":
                 self.solicitud.estado = "Cancelado"
                 self.solicitud.save()
@@ -399,3 +395,84 @@ class OperacionesEmitidas(models.Model):
 
     def __str__(self):
         return f"Op. {self.numero_operacion} - {self.solicitud}"
+
+
+class Ingreso(models.Model):
+    cuenta_de_empresa = models.CharField(
+        max_length=255,
+        choices=(
+            ("CUP", "CUP"),
+            ("ANIR", "ANIR"),
+            ("PRESUPUESTO", "PRESUPUESTO"),
+        ),
+        verbose_name="Cuenta de Empresa:"
+    )
+    tipo_ingreso = models.CharField(
+        max_length=50,
+        choices=(
+            ("Venta", "Venta"),
+            ("Reintegro", "Reintegro"),
+            ("Crédito", "Crédito"),
+            ("Transferencia", "Transferencia"),
+            ("Inversiones", "Inversiones"),
+        ),
+        verbose_name="Tipo de Ingreso"
+    )
+    fecha = models.DateField(
+        verbose_name="Fecha / Fecha Depósito",
+        default=timezone.now
+    )
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name="Importe"
+    )
+    debitar = models.BooleanField(
+        default=False,
+        verbose_name="Debitar",
+        help_text="Marque para registrar la fecha de débito automáticamente."
+    )
+    fecha_debito = models.DateField(
+        verbose_name="Fecha Debitó",
+        null=True,
+        blank=True
+    )
+    concepto = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Concepto"
+    )
+
+    class Meta:
+        verbose_name = "Ingreso"
+        verbose_name_plural = "Ingresos"
+        ordering = ("-fecha",)
+
+    def clean(self):
+        super().clean()
+        if self.tipo_ingreso != "Transferencia" and self.debitar:
+            raise ValidationError({
+                "debitar": "Solo se puede debitar cuando el tipo de ingreso es Transferencia."
+            })
+        if self.tipo_ingreso != "Transferencia" and self.fecha_debito:
+            raise ValidationError({
+                "fecha_debito": "La fecha de débito solo aplica para Transferencias."
+            })
+        if not self.debitar and self.fecha_debito:
+            raise ValidationError({
+                "fecha_debito": "No puede guardar una Fecha Debitó sin marcar la opción Debitar."
+            })
+
+    def save(self, *args, **kwargs):
+        if self.tipo_ingreso != "Transferencia":
+            self.debitar = False
+            self.fecha_debito = None
+        if self.tipo_ingreso == "Transferencia" and self.debitar and not self.fecha_debito:
+            self.fecha_debito = date.today()
+        if not self.debitar:
+            self.fecha_debito = None
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Ingreso {self.tipo_ingreso} - {self.importe}"
