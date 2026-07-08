@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.forms.models import BaseInlineFormSet
 from django.db.models import Sum
 from datetime import date
-from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas, Ingreso
+from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas, Ingreso, ServicioBancario
 from django.utils.html import format_html
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -727,3 +727,88 @@ class IngresoAdmin(admin.ModelAdmin):
 
     def get_ordering(self, request):
         return ()
+
+# Filtro por Año (Servicios Bancarios)
+class AñoFilterSB(admin.SimpleListFilter):
+    title = 'Año'
+    parameter_name = 'año'
+
+    def lookups(self, request, model_admin):
+        años = ServicioBancario.objects.dates('fecha', 'year')
+        return [(a.year, a.year) for a in años]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha__year=self.value())
+        return queryset
+
+
+# Filtro por Mes (Servicios Bancarios)
+class MesFilterSB(admin.SimpleListFilter):
+    title = 'Mes'
+    parameter_name = 'mes'
+
+    def lookups(self, request, model_admin):
+        meses = [
+            (1, "Enero"), (2, "Febrero"), (3, "Marzo"), (4, "Abril"),
+            (5, "Mayo"), (6, "Junio"), (7, "Julio"), (8, "Agosto"),
+            (9, "Septiembre"), (10, "Octubre"), (11, "Noviembre"), (12, "Diciembre"),
+        ]
+        return meses
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(fecha__month=self.value())
+        return queryset
+
+@admin.register(ServicioBancario)
+class ServicioBancarioAdmin(admin.ModelAdmin):
+    list_display = (
+        'fecha_formateada',
+        'importe',
+        'clave',
+        'descripcion',
+    )
+    list_display_links = list(list_display).copy()
+    list_filter = (
+        'cuenta_de_empresa',
+        'clave',
+        MesFilterSB,
+        AñoFilterSB,
+    )
+    search_fields = ()
+
+    fields = (
+        'cuenta_de_empresa',
+        'fecha',
+        'importe',
+        'clave',
+        'descripcion',
+    )
+
+    def fecha_formateada(self, obj):
+        return obj.fecha.strftime("%d/%m/%Y")
+    fecha_formateada.short_description = "Fecha"
+    fecha_formateada.admin_order_field = "fecha"
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        response = super().changelist_view(request, extra_context=extra_context)
+        try:
+            queryset = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+
+        cantidad_servicios = queryset.count()
+        importe_total = queryset.aggregate(total=Sum('importe'))['total'] or 0
+
+        def formato(valor):
+            if valor is not None:
+                s = f"{float(valor):,.2f}"
+                return s.replace(",", " ").replace(".", ",")
+            return "0,00"
+
+        extra_context['cantidad_servicios'] = cantidad_servicios
+        extra_context['importe_total_servicios'] = formato(importe_total)
+        response.context_data.update(extra_context)
+        return response

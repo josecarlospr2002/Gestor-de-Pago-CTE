@@ -490,3 +490,66 @@ class Ingreso(models.Model):
 
     def __str__(self):
         return f"Ingreso {self.tipo_ingreso} - {self.importe}"
+
+class ServicioBancario(models.Model):
+    cuenta_de_empresa = models.CharField(
+        max_length=255,
+        choices=(
+            ("CUP", "CUP"),
+            ("ANIR", "ANIR"),
+            ("PRESUPUESTO", "PRESUPUESTO"),
+        ),
+        verbose_name="Cuenta de Empresa:"
+    )
+    fecha = models.DateField(
+        verbose_name="Fecha",
+        default=timezone.now
+    )
+    importe = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name="Importe"
+    )
+    clave = models.CharField(
+        max_length=50,
+        choices=(
+            ("Chequera", "Chequera"),
+            ("Comisión de Nómina", "Comisión de Nómina"),
+            ("Aporte", "Aporte"),
+            ("Centro de Pago", "Centro de Pago"),
+            ("Comisión", "Comisión"),
+            ("Otro", "Otro"),
+        ),
+        verbose_name="Clave"
+    )
+    descripcion = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Descripción",
+        help_text="Obligatorio solo si selecciona 'Otro' en Clave."
+    )
+
+    class Meta:
+        verbose_name = "Servicio Bancario"
+        verbose_name_plural = "Servicios Bancarios"
+        ordering = ()
+
+    def clean(self):
+        super().clean()
+        hoy = date.today()
+
+        # Validación para que fecha no sea futura
+        if self.fecha and self.fecha > hoy:
+            raise ValidationError({
+                "fecha": "La fecha no puede ser futura. Solo se permiten fechas de hoy o anteriores."
+            })
+
+        # Validación para descripción obligatoria si clave es "Otro"
+        if self.clave == "Otro" and not self.descripcion:
+            raise ValidationError({
+                "descripcion": "La descripción es obligatoria cuando la clave es 'Otro'."
+            })
+
+    def __str__(self):
+        return f"Servicio {self.clave} - {self.importe}"
