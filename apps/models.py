@@ -64,7 +64,7 @@ class SolicitudesDePago(models.Model):
     direccion_proveedor = models.TextField(blank=True, null=True)
 
     importe_total = models.DecimalField(
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
         default=0,
         editable=False,
@@ -78,7 +78,7 @@ class SolicitudesDePago(models.Model):
     )
 
     importe_inversiones = models.DecimalField(
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
         default=0,
         editable=False,
@@ -235,7 +235,7 @@ class ConceptoNormal(models.Model):
     )
 
     importe = models.DecimalField(
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
         validators=[MinValueValidator(0)],
         verbose_name="Importe"
@@ -280,7 +280,7 @@ class ConceptoSalario(models.Model):
     concepto = models.CharField(max_length=30, choices=CONCEPTO_CHOICES, verbose_name="Concepto")
     numero = models.PositiveIntegerField(verbose_name="Número", null=True, blank=True)
     importe = models.DecimalField(
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
         validators=[MinValueValidator(0)],
         verbose_name="Importe"
@@ -322,7 +322,7 @@ class OperacionesEmitidas(models.Model):
         verbose_name="Estado"
     )
     importe_emitido = models.DecimalField(
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
         validators=[MinValueValidator(0)],
         verbose_name="Importe Emitido"
@@ -423,7 +423,7 @@ class Ingreso(models.Model):
         default=timezone.now
     )
     importe = models.DecimalField(
-        max_digits=12,
+        max_digits=20,
         decimal_places=2,
         validators=[MinValueValidator(0)],
         verbose_name="Importe"
@@ -447,10 +447,24 @@ class Ingreso(models.Model):
     class Meta:
         verbose_name = "Ingreso"
         verbose_name_plural = "Ingresos"
-        ordering = ("-fecha",)
+        ordering = ()
 
     def clean(self):
         super().clean()
+        hoy = date.today()
+
+        # Validar que fecha no sea futura
+        if self.fecha and self.fecha > hoy:
+            raise ValidationError({
+                "fecha": "La fecha no puede ser futura. Solo se permiten fechas de hoy o anteriores."
+            })
+
+        # Validar que fecha_debito no sea futura
+        if self.fecha_debito and self.fecha_debito > hoy:
+            raise ValidationError({
+                "fecha_debito": "La fecha de débito no puede ser futura. Solo se permiten fechas de hoy o anteriores."
+            })
+
         if self.tipo_ingreso != "Transferencia" and self.debitar:
             raise ValidationError({
                 "debitar": "Solo se puede debitar cuando el tipo de ingreso es Transferencia."

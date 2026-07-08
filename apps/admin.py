@@ -669,6 +669,7 @@ class IngresoAdmin(admin.ModelAdmin):
         'fecha_debito_formateada',
         'concepto',
     )
+    list_display_links = list(list_display).copy()
     list_filter = (
         'cuenta_de_empresa',
         'tipo_ingreso',
@@ -701,3 +702,28 @@ class IngresoAdmin(admin.ModelAdmin):
         return "—"
     fecha_debito_formateada.short_description = "Fecha Debitó"
     fecha_debito_formateada.admin_order_field = "fecha_debito"
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        response = super().changelist_view(request, extra_context=extra_context)
+        try:
+            queryset = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+
+        cantidad_ingresos = queryset.count()
+        importe_total = queryset.aggregate(total=Sum('importe'))['total'] or 0
+
+        def formato(valor):
+            if valor is not None:
+                s = f"{float(valor):,.2f}"
+                return s.replace(",", " ").replace(".", ",")
+            return "0,00"
+
+        extra_context['cantidad_ingresos'] = cantidad_ingresos
+        extra_context['importe_total_ingresos'] = formato(importe_total)
+        response.context_data.update(extra_context)
+        return response
+
+    def get_ordering(self, request):
+        return ()

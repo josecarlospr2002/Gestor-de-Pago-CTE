@@ -150,3 +150,13 @@ body.model-operacionesemitidas #result_list th.column-mostrar_estado_operacion {
 body.model-operacionesemitidas #result_list td.field-mostrar_estado_operacion {
     display: none;
 }
+
+/* Ingresos: enlaces en negro */
+body.model-ingreso #result_list td a {
+    color: #000000 !important;
+    text-decoration: none;
+}
+body.model-ingreso #result_list td a:hover {
+    color: #333333 !important;
+    text-decoration: underline;
+}
