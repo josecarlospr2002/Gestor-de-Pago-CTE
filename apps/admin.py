@@ -750,6 +750,7 @@ class IngresoAdmin(admin.ModelAdmin):
     def get_ordering(self, request):
         return ()
 
+
 # Filtro por Año (Servicios Bancarios)
 class AñoFilterSB(admin.SimpleListFilter):
     title = 'Año'
@@ -782,6 +783,7 @@ class MesFilterSB(admin.SimpleListFilter):
         if self.value():
             return queryset.filter(fecha__month=self.value())
         return queryset
+
 
 @admin.register(ServicioBancario)
 class ServicioBancarioAdmin(admin.ModelAdmin):
@@ -835,6 +837,7 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
         response.context_data.update(extra_context)
         return response
 
+
 # Filtro por Año (Ajustes de Inversiones)
 class AñoFilterAI(admin.SimpleListFilter):
     title = 'Año'
@@ -867,6 +870,7 @@ class MesFilterAI(admin.SimpleListFilter):
         if self.value():
             return queryset.filter(fecha__month=self.value())
         return queryset
+
 
 @admin.register(AjusteInversiones)
 class AjusteInversionesAdmin(admin.ModelAdmin):

@@ -362,10 +362,37 @@ class OperacionesEmitidas(models.Model):
 
     def clean(self):
         super().clean()
+        hoy = date.today()
 
+        # Validar que fecha_inicial no sea futura
+        if self.fecha_inicial and self.fecha_inicial > hoy:
+            raise ValidationError({
+                "fecha_inicial": "La fecha inicial no puede ser futura. Solo se permiten fechas de hoy o anteriores."
+            })
+
+        # Validar que fecha_final no sea futura
+        if self.fecha_final and self.fecha_final > hoy:
+            raise ValidationError({
+                "fecha_final": "La fecha final no puede ser futura. Solo se permiten fechas de hoy o anteriores."
+            })
+
+        # Si cambia de Debitado/Cancelado a Tránsito, limpiar fecha_final (sin error)
+        if self.pk:
+            original = OperacionesEmitidas.objects.get(pk=self.pk)
+            if original.estado in ("Debitado", "Cancelado") and self.estado == "Tránsito":
+                self.fecha_final = None
+
+        # Si está en Tránsito y tiene fecha_final, lanzar error
+        if self.estado == "Tránsito" and self.fecha_final:
+            raise ValidationError({
+                "fecha_final": "No puede asignar una fecha final a una operación en estado Tránsito."
+            })
+
+        # Si pasa a Debitado o Cancelado y no tiene fecha_final, se asigna hoy
         if self.estado in ("Debitado", "Cancelado") and not self.fecha_final:
-            self.fecha_final = date.today()
+            self.fecha_final = hoy
 
+        # Validaciones de cambio de estado
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
             if original.estado == "Debitado" and self.estado == "Cancelado":
@@ -380,9 +407,6 @@ class OperacionesEmitidas(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
-
-            if original.estado in ("Debitado", "Cancelado") and self.estado == "Tránsito":
-                self.fecha_final = None
 
             if original.estado != "Cancelado" and self.estado == "Cancelado":
                 self.solicitud.estado = "Cancelado"
