@@ -170,3 +170,13 @@ body.model-serviciobancario #result_list td a:hover {
     color: #333333 !important;
     text-decoration: underline;
 }
+
+/* Ajustes de Inversiones: enlaces en negro */
+body.model-ajusteinversiones #result_list td a {
+    color: #000000 !important;
+    text-decoration: none;
+}
+body.model-ajusteinversiones #result_list td a:hover {
+    color: #333333 !important;
+    text-decoration: underline;
+}
