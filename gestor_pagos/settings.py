@@ -22,6 +22,49 @@ INSTALLED_APPS = [
 ]
 JAZZMIN_SETTINGS = {
     "custom_css": "custom/custom.css",
+    "site_title": "Gestor de Pagos CTE",
+    "site_header": "Gestor de Pagos CTE",
+    "site_brand": "Gestor de Pagos CTE",
+    "order_with_respect_to": [
+        "apps.SolicitudesDePago",
+        "apps.OperacionesEmitidas",
+        "apps.Proveedores",
+        "apps.Ingreso",
+        "apps.ServicioBancario",
+        "apps.AjusteInversiones",
+    ],
+    "navigation_expanded": True,
+    "icons": {
+        "apps.SolicitudesDePago": "fas fa-file-invoice",
+        "apps.OperacionesEmitidas": "fas fa-exchange-alt",
+        "apps.Proveedores": "fas fa-truck",
+        "apps.Ingreso": "fas fa-hand-holding-usd",
+        "apps.ServicioBancario": "fas fa-university",
+        "apps.AjusteInversiones": "fas fa-chart-line",
+    },
+    "custom_links": {
+        "apps": [
+            {
+                "name": "Gestión de Pagos",
+                "title": "Gestión de Pagos",
+                "models": [
+                    "apps.SolicitudesDePago",
+                    "apps.OperacionesEmitidas",
+                    "apps.Proveedores",
+                ]
+            },
+            {
+                "name": "Gestión Bancaria",
+                "title": "Gestión Bancaria",
+                "models": [
+                    "apps.Ingreso",
+                    "apps.ServicioBancario",
+                    "apps.AjusteInversiones",
+                ]
+            }
+        ]
+    },
+    "hide_models": [],
 }
 
 MIDDLEWARE = [

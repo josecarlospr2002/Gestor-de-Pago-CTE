@@ -625,6 +625,28 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         extra_context['show_history'] = False
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        response = super().changelist_view(request, extra_context=extra_context)
+        try:
+            queryset = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+
+        cantidad_operaciones = queryset.count()
+        importe_total = queryset.aggregate(total=Sum('importe_emitido'))['total'] or 0
+
+        def formato(valor):
+            if valor is not None:
+                s = f"{float(valor):,.2f}"
+                return s.replace(",", " ").replace(".", ",")
+            return "0,00"
+
+        extra_context['cantidad_operaciones'] = cantidad_operaciones
+        extra_context['importe_total_operaciones'] = formato(importe_total)
+        response.context_data.update(extra_context)
+        return response
+
 
 # Filtro por Año (Ingresos)
 class AñoFilterIngreso(admin.SimpleListFilter):
