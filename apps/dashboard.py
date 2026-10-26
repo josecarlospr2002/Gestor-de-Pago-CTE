@@ -1,7 +1,7 @@
 from django.contrib.admin import AdminSite
 from django.db.models import Sum
 
-from .models import Ingreso, OperacionesEmitidas
+from .models import Ingreso, OperacionesEmitidas, ServicioBancario, AjusteInversiones
 
 CUENTAS_VALIDAS = ("CUP", "ANIR", "PRESUPUESTO")
 CUENTA_DEFAULT = "CUP"
@@ -48,25 +48,35 @@ def _calcular_saldos(cuenta):
     afectan_total = afectan_normales_total + afectan_inversiones_total
 
     transito_total = suma(solo_transito, "importe_emitido")
-
     debitadas_total = suma(solo_debitadas, "importe_emitido")
+
+    servicios_total = suma(
+        ServicioBancario.objects.filter(cuenta_de_empresa=cuenta)
+    )
+
+    ajustes_total = suma(
+        AjusteInversiones.objects.filter(cuenta_de_empresa=cuenta)
+    )
 
     saldo_banco = (
         venta_reint_cred_total
         + transferencias_debitadas_total
         - debitadas_total
+        - servicios_total
     )
 
     saldo_empresa = (
         venta_reint_cred_total
         + transferencias_total
         - afectan_total
+        - servicios_total
     )
 
     saldo_empresa_calculado = (
         venta_reint_cred_total
         + transferencias_debitadas_total
         - afectan_total
+        - servicios_total
     )
 
     saldo_operaciones = (
@@ -74,11 +84,14 @@ def _calcular_saldos(cuenta):
         + transferencias_total
         - inversiones_ingreso_total
         - afectan_normales_total
+        - servicios_total
+        + ajustes_total
     )
 
     saldo_inversiones = (
         inversiones_ingreso_total
         - afectan_inversiones_total
+        - ajustes_total
     )
 
     return {
