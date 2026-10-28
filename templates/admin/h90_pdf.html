@@ -1,0 +1,256 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>H90 - {{ solicitud.numero_de_H90 }}</title>
+    <style>
+        @page {
+            size: letter portrait;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #000;
+        }
+
+        /* Estructura general del cuadro */
+        .container {
+            border: 2px solid #000;
+            width: 100%;
+        }
+
+        /* Estilos de tabla generales */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        td, th {
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+
+        /* Bordes de las celdas del formulario */
+        .b-top { border-top: 1px solid #000; }
+        .b-bottom { border-bottom: 1px solid #000; }
+        .b-left { border-left: 1px solid #000; }
+        .b-right { border-right: 1px solid #000; }
+
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+
+        .label {
+            font-size: 8pt;
+            color: #333;
+        }
+
+        .input-line {
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+        }
+
+        .center { text-align: center; }
+        .right { text-align: right; }
+
+        /* Tabla de conceptos */
+        .table-conceptos th {
+            border-bottom: 1px solid #000;
+            text-align: center;
+            font-weight: normal;
+            font-size: 10pt;
+        }
+        .table-conceptos td {
+            border-bottom: 1px solid #000;
+            height: 20px; /* Altura mínima de cada fila en blanco */
+        }
+
+        /* Cuadro inferior de firmas */
+        .firmas-box {
+            border-top: 1px solid #000;
+            width: 100%;
+        }
+        .firmas-box td {
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+            height: 60px;
+            font-size: 9pt;
+        }
+        .firmas-box td:last-child {
+            border-right: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <table>
+        <tr>
+            <td width="15%" style="font-size: 9pt;">830-0033 (H-90)</td>
+            <td width="60%" class="title">SOLICITUD DE PAGO</td>
+            <td width="25%" class="b-left">
+                <strong>No.</strong> <span style="font-size: 12pt; margin-left: 20px;">{{ solicitud.numero_de_H90 }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <table class="b-top" style="border-top: 1px solid #000;">
+        <tr>
+            <td width="50%">
+                <span class="label">ENTIDAD:</span><br>
+                <div class="input-line">CTE ERNESTO GUEVARA DE LA SERNA</div>
+            </td>
+            <td width="25%">
+                <span class="label">CENTRO DE COSTO:</span><br>
+                <div class="input-line">&nbsp;</div>
+            </td>
+            <td width="25%" class="b-left">
+                <span class="label">FECHA:</span><br>
+                <div class="input-line center">{{ solicitud.fecha_del_modelo|date:"d/m/Y" }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="b-top">
+        <tr>
+            <td colspan="2">
+                <span class="label">PÁGUESE A:</span><br>
+                <div class="input-line">{{ solicitud.nombre_del_proveedor|default:"&nbsp;" }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td width="60%">
+                <span class="label">CUENTA BNC:</span><br>
+                <div class="input-line">{{ solicitud.cuenta_bancaria|default:"&nbsp;" }}</div>
+            </td>
+            <td width="40%">
+                <span class="label">CÓDIGO:</span><br>
+                <div class="input-line">{{ solicitud.codigo_del_proveedor|default:"&nbsp;" }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <span class="label">DIRECCIÓN:</span><br>
+                <div class="input-line">{{ solicitud.direccion_proveedor|default:"&nbsp;" }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="b-top">
+        <tr>
+            <td width="30%">
+                <span class="label">EL IMPORTE DE: $</span>
+                <span style="font-weight: bold; margin-left: 5px;">{{ solicitud.importe_total }}</span>
+            </td>
+            <td width="70%">
+                <span class="label">IMPORTE EN LETRAS:</span>
+                <span style="font-style: italic; margin-left: 5px;">{{ solicitud.importe_total_letras }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <table class="b-top">
+        <tr>
+            <td colspan="2" style="padding-bottom: 10px;">POR LOS SIGUIENTES CONCEPTOS:</td>
+        </tr>
+    </table>
+
+    <table class="table-conceptos">
+        <thead>
+            <tr>
+                <th width="60%">CONCEPTO</th>
+                <th width="40%">IMPORTE</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in solicitud.conceptos_normales.all %}
+            <tr>
+                <td style="padding-left: 20px;">{{ c.concepto }} {{ c.numero|default:"" }}</td>
+                <td class="right" style="padding-right: 20px;">$ {{ c.importe }}</td>
+            </tr>
+            {% endfor %}
+
+            {% for c in solicitud.conceptos_salarios.all %}
+            <tr>
+                <td style="padding-left: 20px;">{{ c.concepto }}</td>
+                <td class="right" style="padding-right: 20px;">$ {{ c.importe }}</td>
+            </tr>
+            {% endfor %}
+
+            {% for i in "12345678"|make_list %}
+            {% endfor %}
+            <tr><td></td><td></td></tr>
+            <tr><td></td><td></td></tr>
+            <tr><td></td><td></td></tr>
+            <tr><td></td><td></td></tr>
+
+            <tr style="border-bottom: none;">
+                <td class="right" style="font-weight: bold; padding-right: 20px; border-bottom: none;">TOTAL</td>
+                <td class="right" style="padding-right: 20px; border-bottom: 1px solid #000;">$ {{ solicitud.importe_total }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="b-top">
+        <tr>
+            <td width="30%">
+                <span class="label">CHEQUE No.:</span>
+                <span style="border-bottom: 1px solid #000; display: inline-block; width: 100px;"></span>
+            </td>
+            <td width="30%">
+                <span class="label">FECHA:</span>
+                <span style="border-bottom: 1px solid #000; display: inline-block; width: 100px;"></span>
+            </td>
+            <td width="40%">
+                <span class="label">IMPORTE: $</span>
+                <span style="font-weight: bold;">{{ solicitud.importe_total }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" style="padding-top: 20px;">
+                <span class="label">RECIBIDO POR:</span>
+                <span style="border-bottom: 1px solid #000; display: inline-block; width: 250px;"></span>
+                <span style="margin-left: 20px;">Carnet de Identidad</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" class="center" style="padding-top: 30px; padding-bottom: 20px;">
+                <span style="border-top: 1px solid #000; display: inline-block; width: 200px;">Firma</span>
+            </td>
+        </tr>
+    </table>
+
+    <table class="firmas-box">
+        <tr>
+            <td width="33%" class="label">AUTORIZADO EL GASTO</td>
+            <td width="34%" class="label">APROBADO EL PAGO</td>
+            <td width="33%" class="label">AUTORIZADO EL PAGO</td>
+        </tr>
+    </table>
+
+    <table style="border-top: 1px solid #000; height: 80px;">
+        <tr>
+            <td colspan="5" class="label" style="padding-bottom: 15px;">CÁRGUESE A:</td>
+        </tr>
+        <tr class="center label">
+            <td width="15%">CTA</td>
+            <td width="15%">SUBCTA</td>
+            <td width="20%">SUBCONTROL</td>
+            <td width="20%">ANÁLISIS</td>
+            <td width="30%">IMPORTE</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="right" style="vertical-align: bottom;">
+                <span class="label">CO No.</span>
+                <span style="border-bottom: 1px solid #000; display: inline-block; width: 150px;"></span>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+</body>
+</html>

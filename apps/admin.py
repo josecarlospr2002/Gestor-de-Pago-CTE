@@ -13,7 +13,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 
 def _saldos_iniciales_listos():
-
+    """
+    Devuelve True solo si existen los 3 SaldoInicial (CUP, ANIR, PRESUPUESTO).
+    Mientras falte alguno, no se puede crear ninguna operación nueva.
+    """
     cuentas_requeridas = {"CUP", "ANIR", "PRESUPUESTO"}
     cuentas_cargadas = set(
         SaldoInicial.objects.values_list("cuenta_de_empresa", flat=True)
@@ -281,6 +284,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "importe_inversiones",
     )
 
+    # === BLOQUEO: no crear si faltan saldos iniciales ===
     def has_add_permission(self, request):
         if not super().has_add_permission(request):
             return False
@@ -453,7 +457,15 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
                 fecha_inicial=fecha_inicial,
             )
 
-            messages.success(request, f"H90 N° {solicitud.numero_de_H90} emitido correctamente.")
+            # --- BOTÓN PARA IMPRIMIR EL PDF ---
+            link_pdf = f'<a href="/admin/imprimir-h90/{solicitud.pk}/" target="_blank" style="background: #1a88ff; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-left: 15px; font-weight: bold;">🖨️ Imprimir H90</a>'
+
+            messages.success(request, format_html(
+                'H90 N° {} emitido correctamente. {}',
+                solicitud.numero_de_H90,
+                format_html(link_pdf)
+            ))
+
             return redirect('admin:apps_solicitudesdepago_changelist')
 
         return render(request, 'admin/apps/solicitudesdepago/emitir_modal.html', {

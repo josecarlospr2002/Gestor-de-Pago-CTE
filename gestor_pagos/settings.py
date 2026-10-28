@@ -117,9 +117,9 @@ TIME_ZONE = 'America/Havana'
 USE_I18N = True
 USE_TZ = True
 
-DATE_FORMAT = "d/m/Y"             # cómo se muestran las fechas -> 30/01/2026
-DATETIME_FORMAT = "d/m/Y H:i"     # fecha y hora -> 30/01/2026 14:35
-DATE_INPUT_FORMATS = ["%d/%m/%Y"] # cómo se aceptan fechas en formularios
+DATE_FORMAT = "d/m/Y"  # cómo se muestran las fechas -> 30/01/2026
+DATETIME_FORMAT = "d/m/Y H:i"  # fecha y hora -> 30/01/2026 14:35
+DATE_INPUT_FORMATS = ["%d/%m/%Y"]  # cómo se aceptan fechas en formularios
 DATETIME_INPUT_FORMATS = ["%d/%m/%Y %H:%M", "%d/%m/%Y"]
 
 # Archivos estáticos
@@ -129,6 +129,3 @@ STATICFILES_DIRS = [BASE_DIR / "apps/static"]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/admin/'
-
-
-

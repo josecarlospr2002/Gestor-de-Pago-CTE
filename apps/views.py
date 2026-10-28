@@ -3,6 +3,11 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from decimal import Decimal, InvalidOperation
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from io import BytesIO
+from .models import SolicitudesDePago
 
 from .models import SaldoInicial
 
@@ -82,3 +87,28 @@ def inicializar_saldos(request):
         "has_permission": True,
     }
     return render(request, "admin/inicializar_saldos.html", context)
+
+
+def generar_pdf_h90(request, pk):
+
+    try:
+        solicitud = SolicitudesDePago.objects.get(pk=pk)
+    except SolicitudesDePago.DoesNotExist:
+        return HttpResponse("Solicitud no encontrada", status=404)
+
+    template = get_template('admin/h90_pdf.html')
+
+    context = {
+        'solicitud': solicitud,
+    }
+    html = template.render(context)
+
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="H90_{solicitud.numero_de_H90}.pdf"'
+        return response
+
+    return HttpResponse('Error al generar el PDF', status=500)
