@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div style="max-width: 1100px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.15);">
+        <h1 style="margin-top: 0; color: #333; font-size: 24px;">Inicializar Saldos</h1>
+        <p style="color: #666; margin-bottom: 25px;">
+            Introduzca los valores iniciales (punto de arranque) para cada cuenta de empresa.
+            A partir de estos valores se aplicarán los movimientos del sistema.
+            Solo el superusuario puede editar esta información.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for bloque in bloques %}
+                <fieldset
+                        style="border: 1px solid #1a88ff; border-radius: 6px; padding: 15px 20px; margin-bottom: 25px;">
+                    <legend style="padding: 0 10px; font-weight: bold; color: #1a88ff; font-size: 16px;">
+                        {{ bloque.cuenta }}
+                    </legend>
+
+                    <table style="width: 100%; border-collapse: collapse;">
+                        {% for fila in bloque.filas %}
+                            <tr>
+                                <td style="padding: 8px 10px; width: 45%; vertical-align: middle;">
+                                    <label for="id_{{ fila.clave }}" style="font-weight: bold; color: #333;">
+                                        {{ fila.etiqueta }}
+                                    </label>
+                                </td>
+                                <td style="padding: 8px 10px;">
+                                    <input type="text"
+                                           id="id_{{ fila.clave }}"
+                                           name="{{ fila.clave }}"
+                                           value="{{ fila.valor }}"
+                                           style="width: 100%; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+                                    {% if fila.error %}
+                                        <div style="color: #d00; font-size: 12px; margin-top: 4px;">{{ fila.error }}</div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </fieldset>
+            {% endfor %}
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit"
+                        style="background-color: #1a88ff; color: white; padding: 10px 25px; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold;">
+                    Guardar Saldos Iniciales
+                </button>
+                <a href="{% url 'admin:index' %}"
+                   style="background-color: #ccc; color: #333; padding: 10px 25px; text-decoration: none; border-radius: 4px; font-size: 15px;">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

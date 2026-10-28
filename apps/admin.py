@@ -6,9 +6,11 @@ from django.http import JsonResponse
 from django.forms.models import BaseInlineFormSet
 from django.db.models import Sum
 from datetime import date
-from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas, Ingreso, ServicioBancario, AjusteInversiones
+from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSalario, OperacionesEmitidas, Ingreso, \
+    ServicioBancario, AjusteInversiones, SaldoInicial
 from django.utils.html import format_html
 from django.shortcuts import render, redirect, get_object_or_404
+
 
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
@@ -290,11 +292,13 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
 
     def mostrar_beneficiario(self, obj):
         return obj.identificador_del_proveedor
+
     mostrar_beneficiario.short_description = "Beneficiario"
     mostrar_beneficiario.admin_order_field = "identificador_del_proveedor__ident_del_prov"
 
     def mostrar_fecha(self, obj):
         return obj.fecha_del_modelo.strftime("%d/%m/%Y")
+
     mostrar_fecha.short_description = "Fecha"
     mostrar_fecha.admin_order_field = "fecha_del_modelo"
 
@@ -303,6 +307,7 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             s = f"{float(obj.importe_total):,.2f}"
             return s.replace(",", " ").replace(".", ",")
         return "0,00"
+
     mostrar_importe.short_description = "Importe"
     mostrar_importe.admin_order_field = "importe_total"
 
@@ -340,11 +345,13 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         cantidad_pagos = queryset.count()
         importe_total = queryset.aggregate(total=Sum('importe_total'))['total'] or 0
         importe_inversiones = queryset.aggregate(total=Sum('importe_inversiones'))['total'] or 0
+
         def formato(valor):
             if valor is not None:
                 s = f"{float(valor):,.2f}"
                 return s.replace(",", " ").replace(".", ",")
             return "0,00"
+
         extra_context['cantidad_pagos'] = cantidad_pagos
         extra_context['importe_total_display'] = formato(importe_total)
         extra_context['importe_inversiones_display'] = formato(importe_inversiones)
@@ -391,7 +398,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path("get-next-h90/", self.admin_site.admin_view(self.get_next_h90), name="solicitudesdepago_get_next_h90"),
-            path("get-proveedor/<int:pk>/", self.admin_site.admin_view(self.get_proveedor), name="solicitudesdepago_get_proveedor"),
+            path("get-proveedor/<int:pk>/", self.admin_site.admin_view(self.get_proveedor),
+                 name="solicitudesdepago_get_proveedor"),
             path("emitir-h90/<int:pk>/", self.admin_site.admin_view(self.emitir_h90), name="solicitudesdepago_emitir"),
         ]
         return custom_urls + urls
@@ -519,6 +527,7 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
 
     def mostrar_h90_display(self, obj):
         return obj.solicitud.numero_de_H90
+
     mostrar_h90_display.short_description = "H90"
 
     def mostrar_concepto_display(self, obj):
@@ -542,24 +551,29 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         if solicitud.descripcion:
             resultado += f" | {solicitud.descripcion}"
         return resultado
+
     mostrar_concepto_display.short_description = "Concepto"
 
     def mostrar_suministrador_display(self, obj):
         return obj.solicitud.identificador_del_proveedor
+
     mostrar_suministrador_display.short_description = "Suministrador"
 
     def mostrar_h90(self, obj):
         return obj.solicitud.numero_de_H90
+
     mostrar_h90.short_description = "H90"
     mostrar_h90.admin_order_field = "solicitud__numero_de_H90"
 
     def mostrar_no_cheque(self, obj):
         return obj.numero_serie
+
     mostrar_no_cheque.short_description = "No. Cheque"
     mostrar_no_cheque.admin_order_field = "numero_serie"
 
     def fecha_inicial_formateada(self, obj):
         return obj.fecha_inicial.strftime("%d/%m/%Y")
+
     fecha_inicial_formateada.short_description = "Fecha Inicial"
     fecha_inicial_formateada.admin_order_field = "fecha_inicial"
 
@@ -567,6 +581,7 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         if obj.fecha_final:
             return obj.fecha_final.strftime("%d/%m/%Y")
         return "—"
+
     fecha_final_formateada.short_description = "Fecha Final"
     fecha_final_formateada.admin_order_field = "fecha_final"
 
@@ -591,11 +606,13 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         if solicitud.descripcion:
             resultado += f" | {solicitud.descripcion}"
         return resultado
+
     mostrar_concepto.short_description = "Concepto"
     mostrar_concepto.admin_order_field = "solicitud__descripcion"
 
     def mostrar_suministrador(self, obj):
         return obj.solicitud.identificador_del_proveedor
+
     mostrar_suministrador.short_description = "Suministrador"
     mostrar_suministrador.admin_order_field = "solicitud__identificador_del_proveedor__ident_del_prov"
 
@@ -605,6 +622,7 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         elif obj.estado == "Debitado":
             return format_html('<span style="display:none;">Debitado</span>Debitado')
         return format_html('<span style="display:none;">Tránsito</span>Tránsito')
+
     mostrar_estado_operacion.short_description = ""
 
     def get_row_class(self, obj):
@@ -715,6 +733,7 @@ class IngresoAdmin(admin.ModelAdmin):
 
     def fecha_formateada(self, obj):
         return obj.fecha.strftime("%d/%m/%Y")
+
     fecha_formateada.short_description = "Fecha / Fecha Depósito"
     fecha_formateada.admin_order_field = "fecha"
 
@@ -722,6 +741,7 @@ class IngresoAdmin(admin.ModelAdmin):
         if obj.fecha_debito:
             return obj.fecha_debito.strftime("%d/%m/%Y")
         return "—"
+
     fecha_debito_formateada.short_description = "Fecha Debitó"
     fecha_debito_formateada.admin_order_field = "fecha_debito"
 
@@ -812,6 +832,7 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
 
     def fecha_formateada(self, obj):
         return obj.fecha.strftime("%d/%m/%Y")
+
     fecha_formateada.short_description = "Fecha"
     fecha_formateada.admin_order_field = "fecha"
 
@@ -899,6 +920,7 @@ class AjusteInversionesAdmin(admin.ModelAdmin):
 
     def fecha_formateada(self, obj):
         return obj.fecha.strftime("%d/%m/%Y")
+
     fecha_formateada.short_description = "Fecha"
     fecha_formateada.admin_order_field = "fecha"
 
@@ -923,3 +945,29 @@ class AjusteInversionesAdmin(admin.ModelAdmin):
         extra_context['importe_total_ajustes'] = formato(importe_total)
         response.context_data.update(extra_context)
         return response
+
+
+@admin.register(SaldoInicial)
+class SaldoInicialAdmin(admin.ModelAdmin):
+    list_display = (
+        'cuenta_de_empresa',
+        'saldo_empresa',
+        'saldo_empresa_calculado',
+        'saldo_banco',
+        'transito',
+        'saldo_inversiones',
+        'saldo_operaciones',
+    )
+    list_display_links = list(list_display).copy()
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser

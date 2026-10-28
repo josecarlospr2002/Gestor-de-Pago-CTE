@@ -6,6 +6,7 @@ from num2words import num2words
 import datetime
 from datetime import date
 
+
 class Proveedores(models.Model):
     ident_del_prov = models.CharField(max_length=255, verbose_name="Identificador del Prov:")
     tit_de_la_cuenta = models.CharField(max_length=255, verbose_name="Titular de la Cuenta:")
@@ -515,6 +516,7 @@ class Ingreso(models.Model):
     def __str__(self):
         return f"Ingreso {self.tipo_ingreso} - {self.importe}"
 
+
 class ServicioBancario(models.Model):
     cuenta_de_empresa = models.CharField(
         max_length=255,
@@ -578,6 +580,7 @@ class ServicioBancario(models.Model):
     def __str__(self):
         return f"Servicio {self.clave} - {self.importe}"
 
+
 class AjusteInversiones(models.Model):
     cuenta_de_empresa = models.CharField(
         max_length=255,
@@ -636,3 +639,67 @@ class AjusteInversiones(models.Model):
 
     def __str__(self):
         return f"Ajuste {self.clave} - {self.importe}"
+
+
+class SaldoInicial(models.Model):
+    CUENTA_CHOICES = (
+        ("CUP", "CUP"),
+        ("ANIR", "ANIR"),
+        ("PRESUPUESTO", "PRESUPUESTO"),
+    )
+
+    cuenta_de_empresa = models.CharField(
+        max_length=255,
+        choices=CUENTA_CHOICES,
+        unique=True,
+        verbose_name="Cuenta de Empresa",
+    )
+    saldo_empresa = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Saldo de Empresa",
+    )
+    saldo_empresa_calculado = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Saldo de Empresa Calculado",
+    )
+    saldo_banco = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Saldo de Banco",
+    )
+    transito = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Tránsito",
+    )
+    saldo_inversiones = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Saldo de Inversiones",
+    )
+    saldo_operaciones = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Saldo de Operaciones",
+    )
+
+    class Meta:
+        verbose_name = "Saldo Inicial"
+        verbose_name_plural = "Saldos Iniciales"
+
+    def __str__(self):
+        return f"Saldo inicial — {self.cuenta_de_empresa}"

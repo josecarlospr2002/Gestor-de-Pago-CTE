@@ -1,7 +1,11 @@
+from decimal import Decimal
+
 from django.contrib.admin import AdminSite
 from django.db.models import Sum
 
-from .models import Ingreso, OperacionesEmitidas, ServicioBancario, AjusteInversiones
+from .models import (
+    Ingreso, OperacionesEmitidas, ServicioBancario, AjusteInversiones, SaldoInicial,
+)
 
 CUENTAS_VALIDAS = ("CUP", "ANIR", "PRESUPUESTO")
 CUENTA_DEFAULT = "CUP"
@@ -14,7 +18,26 @@ def formato_es(valor):
     return s.replace(",", " ").replace(".", ",")
 
 
+def _obtener_saldo_inicial(cuenta):
+
+    campos = (
+        "saldo_empresa",
+        "saldo_empresa_calculado",
+        "saldo_banco",
+        "transito",
+        "saldo_inversiones",
+        "saldo_operaciones",
+    )
+    try:
+        si = SaldoInicial.objects.get(cuenta_de_empresa=cuenta)
+        return {c: getattr(si, c) for c in campos}
+    except SaldoInicial.DoesNotExist:
+        return {c: Decimal("0") for c in campos}
+
+
 def _calcular_saldos(cuenta):
+
+    base = _obtener_saldo_inicial(cuenta)
 
     ingresos = Ingreso.objects.filter(cuenta_de_empresa=cuenta)
 
@@ -26,7 +49,7 @@ def _calcular_saldos(cuenta):
     inversiones_ingreso = ingresos.filter(tipo_ingreso="Inversiones")
 
     def suma(qs, campo="importe"):
-        return qs.aggregate(total=Sum(campo))["total"] or 0
+        return qs.aggregate(total=Sum(campo))["total"] or Decimal("0")
 
     venta_reint_cred_total = suma(venta_reint_cred)
     transferencias_total = suma(transferencias)
@@ -59,28 +82,32 @@ def _calcular_saldos(cuenta):
     )
 
     saldo_banco = (
-        venta_reint_cred_total
+        base["saldo_banco"]
+        + venta_reint_cred_total
         + transferencias_debitadas_total
         - debitadas_total
         - servicios_total
     )
 
     saldo_empresa = (
-        venta_reint_cred_total
+        base["saldo_empresa"]
+        + venta_reint_cred_total
         + transferencias_total
         - afectan_total
         - servicios_total
     )
 
     saldo_empresa_calculado = (
-        venta_reint_cred_total
+        base["saldo_empresa_calculado"]
+        + venta_reint_cred_total
         + transferencias_debitadas_total
         - afectan_total
         - servicios_total
     )
 
     saldo_operaciones = (
-        venta_reint_cred_total
+        base["saldo_operaciones"]
+        + venta_reint_cred_total
         + transferencias_total
         - inversiones_ingreso_total
         - afectan_normales_total
@@ -89,16 +116,19 @@ def _calcular_saldos(cuenta):
     )
 
     saldo_inversiones = (
-        inversiones_ingreso_total
+        base["saldo_inversiones"]
+        + inversiones_ingreso_total
         - afectan_inversiones_total
         - ajustes_total
     )
+
+    transito = base["transito"] + transito_total
 
     return {
         "saldo_empresa": formato_es(saldo_empresa),
         "saldo_empresa_calculado": formato_es(saldo_empresa_calculado),
         "saldo_banco": formato_es(saldo_banco),
-        "transito": formato_es(transito_total),
+        "transito": formato_es(transito),
         "saldo_inversiones": formato_es(saldo_inversiones),
         "saldo_operaciones": formato_es(saldo_operaciones),
     }

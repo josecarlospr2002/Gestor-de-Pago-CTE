@@ -3,9 +3,6 @@
 {% block content %}
 <div id="content-main" style="display: flex; gap: 120px; flex-wrap: wrap; padding-left: 120px;">
 
-    <!-- ============================================ -->
-    <!-- GESTIÓN DE PAGOS                              -->
-    <!-- ============================================ -->
     <div class="module" style="flex: 1; min-width: 400px; border: 1px solid #1a88ff; border-radius: 8px; overflow: hidden;">
         <div style="background: #1a88ff; color: white; padding: 12px 15px; font-size: 18px; font-weight: bold;">
             <i class="fas fa-file-invoice" style="margin-right: 8px;"></i>Gestión de Pagos
@@ -13,7 +10,6 @@
         <table style="width: 100%;">
             <tbody>
 
-                <!-- Solicitudes de Pago -->
                 {% for app in app_list %}
                     {% for model in app.models %}
                         {% if model.object_name == "SolicitudesDePago" %}
@@ -37,7 +33,6 @@
                     {% endfor %}
                 {% endfor %}
 
-                <!-- Operaciones Emitidas -->
                 {% for app in app_list %}
                     {% for model in app.models %}
                         {% if model.object_name == "OperacionesEmitidas" %}
@@ -58,7 +53,6 @@
                     {% endfor %}
                 {% endfor %}
 
-                <!-- Proveedores -->
                 {% for app in app_list %}
                     {% for model in app.models %}
                         {% if model.object_name == "Proveedores" %}
@@ -86,9 +80,6 @@
         </table>
     </div>
 
-    <!-- ============================================ -->
-    <!-- OTRAS OPERACIONES                            -->
-    <!-- ============================================ -->
     <div class="module" style="flex: 1; min-width: 400px; border: 1px solid #28a745; border-radius: 8px; overflow: hidden;">
         <div style="background: #28a745; color: white; padding: 12px 15px; font-size: 18px; font-weight: bold;">
             <i class="fas fa-university" style="margin-right: 8px;"></i>Otras Operaciones
@@ -96,7 +87,6 @@
         <table style="width: 100%;">
             <tbody>
 
-                <!-- Ingreso -->
                 {% for app in app_list %}
                     {% for model in app.models %}
                         {% if model.object_name == "Ingreso" %}
@@ -120,7 +110,6 @@
                     {% endfor %}
                 {% endfor %}
 
-                <!-- Servicio Bancario -->
                 {% for app in app_list %}
                     {% for model in app.models %}
                         {% if model.object_name == "ServicioBancario" %}
@@ -144,7 +133,6 @@
                     {% endfor %}
                 {% endfor %}
 
-                <!-- Ajuste de Inversiones -->
                 {% for app in app_list %}
                     {% for model in app.models %}
                         {% if model.object_name == "AjusteInversiones" %}
@@ -175,10 +163,8 @@
 </div>
 
 
-<!-- SELECTOR DE CUENTA + INDICADORES FINANCIEROS -->
 <div style="padding: 30px 10px 0 10px;">
 
-    <!-- Selector de cuenta -->
     <form method="get" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
         <label for="id_cuenta" style="font-weight: bold; color: #333;">Cuenta de Empresa:</label>
         <select id="id_cuenta" name="cuenta" onchange="this.form.submit();"
@@ -189,12 +175,19 @@
         </select>
     </form>
 
+    {% if request.user.is_superuser %}
+        <div style="margin-bottom: 15px;">
+            <a href="{% url 'inicializar_saldos' %}"
+               style="background-color: #6f42c1; color: white; padding: 8px 18px; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: bold; display: inline-block;">
+                <i class="fas fa-cog" style="margin-right: 6px;"></i> Inicializar Saldos
+            </a>
+        </div>
+    {% endif %}
+
     <div style="display: flex; gap: 20px;">
 
-        <!-- COLUMNA 1 -->
         <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
 
-            <!-- Saldo de Empresa -->
             <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 20px; color: #1a88ff; margin-bottom: 5px;">
                     <i class="fas fa-building"></i>
@@ -203,7 +196,6 @@
                 <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_empresa }}</div>
             </div>
 
-            <!-- Saldo de Empresa Calculado -->
             <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 20px; color: #17a2b8; margin-bottom: 5px;">
                     <i class="fas fa-calculator"></i>
@@ -214,10 +206,8 @@
 
         </div>
 
-        <!-- COLUMNA 2 -->
         <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
 
-            <!-- Saldo de Banco -->
             <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 20px; color: #28a745; margin-bottom: 5px;">
                     <i class="fas fa-university"></i>
@@ -226,7 +216,6 @@
                 <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_banco }}</div>
             </div>
 
-            <!-- Tránsito -->
             <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 20px; color: #ffc107; margin-bottom: 5px;">
                     <i class="fas fa-truck"></i>
@@ -237,10 +226,8 @@
 
         </div>
 
-        <!-- COLUMNA 3 -->
         <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
 
-            <!-- Saldo de Inversiones -->
             <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 20px; color: #6f42c1; margin-bottom: 5px;">
                     <i class="fas fa-chart-line"></i>
@@ -249,7 +236,6 @@
                 <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_inversiones }}</div>
             </div>
 
-            <!-- Saldo de Operaciones -->
             <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 20px; color: #fd7e14; margin-bottom: 5px;">
                     <i class="fas fa-cogs"></i>
