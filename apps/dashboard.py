@@ -35,6 +35,15 @@ def _obtener_saldo_inicial(cuenta):
         return {c: Decimal("0") for c in campos}
 
 
+def _saldos_iniciales_listos():
+    """True solo si existen los 3 SaldoInicial (CUP, ANIR, PRESUPUESTO)."""
+    cuentas_requeridas = set(CUENTAS_VALIDAS)
+    cuentas_cargadas = set(
+        SaldoInicial.objects.values_list("cuenta_de_empresa", flat=True)
+    )
+    return cuentas_requeridas.issubset(cuentas_cargadas)
+
+
 def _calcular_saldos(cuenta):
 
     base = _obtener_saldo_inicial(cuenta)
@@ -145,6 +154,7 @@ def _index_con_dashboard(self, request, extra_context=None):
     extra_context = extra_context or {}
     extra_context["cuenta_actual"] = cuenta
     extra_context["cuentas"] = CUENTAS_VALIDAS
+    extra_context["saldos_listos"] = _saldos_iniciales_listos()
     extra_context.update(_calcular_saldos(cuenta))
 
     return _index_original(self, request, extra_context=extra_context)

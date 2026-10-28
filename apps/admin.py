@@ -12,6 +12,21 @@ from django.utils.html import format_html
 from django.shortcuts import render, redirect, get_object_or_404
 
 
+def _saldos_iniciales_listos():
+
+    cuentas_requeridas = {"CUP", "ANIR", "PRESUPUESTO"}
+    cuentas_cargadas = set(
+        SaldoInicial.objects.values_list("cuenta_de_empresa", flat=True)
+    )
+    return cuentas_requeridas.issubset(cuentas_cargadas)
+
+
+MENSAJE_BLOQUEO = (
+    "Debe inicializar los saldos antes de crear operaciones. "
+    "Vaya al dashboard → botón 'Inicializar Saldos'."
+)
+
+
 class SolicitudesDePagoForm(forms.ModelForm):
     class Meta:
         model = SolicitudesDePago
@@ -266,6 +281,36 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         "importe_inversiones",
     )
 
+    def has_add_permission(self, request):
+        if not super().has_add_permission(request):
+            return False
+        return _saldos_iniciales_listos()
+
+    def changelist_view(self, request, extra_context=None):
+        if not _saldos_iniciales_listos():
+            messages.warning(request, MENSAJE_BLOQUEO)
+        extra_context = extra_context or {}
+        response = super().changelist_view(request, extra_context=extra_context)
+        try:
+            queryset = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+        cantidad_pagos = queryset.count()
+        importe_total = queryset.aggregate(total=Sum('importe_total'))['total'] or 0
+        importe_inversiones = queryset.aggregate(total=Sum('importe_inversiones'))['total'] or 0
+
+        def formato(valor):
+            if valor is not None:
+                s = f"{float(valor):,.2f}"
+                return s.replace(",", " ").replace(".", ",")
+            return "0,00"
+
+        extra_context['cantidad_pagos'] = cantidad_pagos
+        extra_context['importe_total_display'] = formato(importe_total)
+        extra_context['importe_inversiones_display'] = formato(importe_inversiones)
+        response.context_data.update(extra_context)
+        return response
+
     def mostrar_estado(self, obj):
         if obj.estado == "Cancelado":
             return format_html('<span style="display:none;">Cancelado</span>Cancelado')
@@ -335,29 +380,6 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     mostrar_conceptos_pago.short_description = "Conceptos de Pago"
     mostrar_conceptos_pago.admin_order_field = "descripcion"
 
-    def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        response = super().changelist_view(request, extra_context=extra_context)
-        try:
-            queryset = response.context_data['cl'].queryset
-        except (AttributeError, KeyError):
-            return response
-        cantidad_pagos = queryset.count()
-        importe_total = queryset.aggregate(total=Sum('importe_total'))['total'] or 0
-        importe_inversiones = queryset.aggregate(total=Sum('importe_inversiones'))['total'] or 0
-
-        def formato(valor):
-            if valor is not None:
-                s = f"{float(valor):,.2f}"
-                return s.replace(",", " ").replace(".", ",")
-            return "0,00"
-
-        extra_context['cantidad_pagos'] = cantidad_pagos
-        extra_context['importe_total_display'] = formato(importe_total)
-        extra_context['importe_inversiones_display'] = formato(importe_inversiones)
-        response.context_data.update(extra_context)
-        return response
-
     def save_model(self, request, obj, form, change):
         año = obj.fecha_del_modelo.year
         if obj.numero_de_H90:
@@ -397,10 +419,12 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path("get-next-h90/", self.admin_site.admin_view(self.get_next_h90), name="solicitudesdepago_get_next_h90"),
+            path("get-next-h90/", self.admin_site.admin_view(self.get_next_h90),
+                 name="solicitudesdepago_get_next_h90"),
             path("get-proveedor/<int:pk>/", self.admin_site.admin_view(self.get_proveedor),
                  name="solicitudesdepago_get_proveedor"),
-            path("emitir-h90/<int:pk>/", self.admin_site.admin_view(self.emitir_h90), name="solicitudesdepago_emitir"),
+            path("emitir-h90/<int:pk>/", self.admin_site.admin_view(self.emitir_h90),
+                 name="solicitudesdepago_emitir"),
         ]
         return custom_urls + urls
 
@@ -731,6 +755,11 @@ class IngresoAdmin(admin.ModelAdmin):
     class Media:
         js = ('js/ingreso_debitar.js',)
 
+    def has_add_permission(self, request):
+        if not super().has_add_permission(request):
+            return False
+        return _saldos_iniciales_listos()
+
     def fecha_formateada(self, obj):
         return obj.fecha.strftime("%d/%m/%Y")
 
@@ -746,6 +775,8 @@ class IngresoAdmin(admin.ModelAdmin):
     fecha_debito_formateada.admin_order_field = "fecha_debito"
 
     def changelist_view(self, request, extra_context=None):
+        if not _saldos_iniciales_listos():
+            messages.warning(request, MENSAJE_BLOQUEO)
         extra_context = extra_context or {}
         response = super().changelist_view(request, extra_context=extra_context)
         try:
@@ -830,6 +861,11 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
         'descripcion',
     )
 
+    def has_add_permission(self, request):
+        if not super().has_add_permission(request):
+            return False
+        return _saldos_iniciales_listos()
+
     def fecha_formateada(self, obj):
         return obj.fecha.strftime("%d/%m/%Y")
 
@@ -837,6 +873,8 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
     fecha_formateada.admin_order_field = "fecha"
 
     def changelist_view(self, request, extra_context=None):
+        if not _saldos_iniciales_listos():
+            messages.warning(request, MENSAJE_BLOQUEO)
         extra_context = extra_context or {}
         response = super().changelist_view(request, extra_context=extra_context)
         try:
@@ -918,6 +956,11 @@ class AjusteInversionesAdmin(admin.ModelAdmin):
         'descripcion',
     )
 
+    def has_add_permission(self, request):
+        if not super().has_add_permission(request):
+            return False
+        return _saldos_iniciales_listos()
+
     def fecha_formateada(self, obj):
         return obj.fecha.strftime("%d/%m/%Y")
 
@@ -925,6 +968,8 @@ class AjusteInversionesAdmin(admin.ModelAdmin):
     fecha_formateada.admin_order_field = "fecha"
 
     def changelist_view(self, request, extra_context=None):
+        if not _saldos_iniciales_listos():
+            messages.warning(request, MENSAJE_BLOQUEO)
         extra_context = extra_context or {}
         response = super().changelist_view(request, extra_context=extra_context)
         try:

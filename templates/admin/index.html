@@ -1,252 +1,268 @@
 {% extends "admin/index.html" %}
 
 {% block content %}
-<div id="content-main" style="display: flex; gap: 120px; flex-wrap: wrap; padding-left: 120px;">
 
-    <div class="module" style="flex: 1; min-width: 400px; border: 1px solid #1a88ff; border-radius: 8px; overflow: hidden;">
-        <div style="background: #1a88ff; color: white; padding: 12px 15px; font-size: 18px; font-weight: bold;">
-            <i class="fas fa-file-invoice" style="margin-right: 8px;"></i>Gestión de Pagos
-        </div>
-        <table style="width: 100%;">
-            <tbody>
-
-                {% for app in app_list %}
-                    {% for model in app.models %}
-                        {% if model.object_name == "SolicitudesDePago" %}
-                            <tr class="model-{{ model.object_name|lower }}">
-                                <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
-                                        <i class="fas fa-file-invoice" style="margin-right: 8px; color: #1a88ff;"></i>
-                                        {{ model.name }}
-                                    </a>
-                                </th>
-                                <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
-                                        <i class="fas fa-plus"></i> Añadir
-                                    </a>
-                                    <a href="{{ model.admin_url }}" class="changelink">
-                                        <i class="fas fa-pencil-alt"></i> Modificar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-
-                {% for app in app_list %}
-                    {% for model in app.models %}
-                        {% if model.object_name == "OperacionesEmitidas" %}
-                            <tr class="model-{{ model.object_name|lower }}">
-                                <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
-                                        <i class="fas fa-exchange-alt" style="margin-right: 8px; color: #1a88ff;"></i>
-                                        {{ model.name }}
-                                    </a>
-                                </th>
-                                <td style="padding: 12px 15px; border-bottom: 1px solid #eee; padding-left: 60px;">
-                                    <a href="{{ model.admin_url }}" class="changelink">
-                                        <i class="fas fa-eye"></i> Ver
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-
-                {% for app in app_list %}
-                    {% for model in app.models %}
-                        {% if model.object_name == "Proveedores" %}
-                            <tr class="model-{{ model.object_name|lower }}">
-                                <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
-                                        <i class="fas fa-truck" style="margin-right: 8px; color: #1a88ff;"></i>
-                                        {{ model.name }}
-                                    </a>
-                                </th>
-                                <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
-                                        <i class="fas fa-plus"></i> Añadir
-                                    </a>
-                                    <a href="{{ model.admin_url }}" class="changelink">
-                                        <i class="fas fa-pencil-alt"></i> Modificar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-
-            </tbody>
-        </table>
-    </div>
-
-    <div class="module" style="flex: 1; min-width: 400px; border: 1px solid #28a745; border-radius: 8px; overflow: hidden;">
-        <div style="background: #28a745; color: white; padding: 12px 15px; font-size: 18px; font-weight: bold;">
-            <i class="fas fa-university" style="margin-right: 8px;"></i>Otras Operaciones
-        </div>
-        <table style="width: 100%;">
-            <tbody>
-
-                {% for app in app_list %}
-                    {% for model in app.models %}
-                        {% if model.object_name == "Ingreso" %}
-                            <tr class="model-{{ model.object_name|lower }}">
-                                <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
-                                        <i class="fas fa-hand-holding-usd" style="margin-right: 8px; color: #28a745;"></i>
-                                        {{ model.name }}
-                                    </a>
-                                </th>
-                                <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
-                                        <i class="fas fa-plus"></i> Añadir
-                                    </a>
-                                    <a href="{{ model.admin_url }}" class="changelink">
-                                        <i class="fas fa-pencil-alt"></i> Modificar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-
-                {% for app in app_list %}
-                    {% for model in app.models %}
-                        {% if model.object_name == "ServicioBancario" %}
-                            <tr class="model-{{ model.object_name|lower }}">
-                                <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
-                                        <i class="fas fa-university" style="margin-right: 8px; color: #28a745;"></i>
-                                        {{ model.name }}
-                                    </a>
-                                </th>
-                                <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
-                                        <i class="fas fa-plus"></i> Añadir
-                                    </a>
-                                    <a href="{{ model.admin_url }}" class="changelink">
-                                        <i class="fas fa-pencil-alt"></i> Modificar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-
-                {% for app in app_list %}
-                    {% for model in app.models %}
-                        {% if model.object_name == "AjusteInversiones" %}
-                            <tr class="model-{{ model.object_name|lower }}">
-                                <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
-                                        <i class="fas fa-chart-line" style="margin-right: 8px; color: #28a745;"></i>
-                                        {{ model.name }}
-                                    </a>
-                                </th>
-                                <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                    <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
-                                        <i class="fas fa-plus"></i> Añadir
-                                    </a>
-                                    <a href="{{ model.admin_url }}" class="changelink">
-                                        <i class="fas fa-pencil-alt"></i> Modificar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                {% endfor %}
-
-            </tbody>
-        </table>
-    </div>
-
-</div>
-
-
-<div style="padding: 30px 10px 0 10px;">
-
-    <form method="get" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-        <label for="id_cuenta" style="font-weight: bold; color: #333;">Cuenta de Empresa:</label>
-        <select id="id_cuenta" name="cuenta" onchange="this.form.submit();"
-                style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
-            {% for c in cuentas %}
-                <option value="{{ c }}" {% if c == cuenta_actual %}selected{% endif %}>{{ c }}</option>
-            {% endfor %}
-        </select>
-    </form>
-
-    {% if request.user.is_superuser %}
-        <div style="margin-bottom: 15px;">
-            <a href="{% url 'inicializar_saldos' %}"
-               style="background-color: #6f42c1; color: white; padding: 8px 18px; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: bold; display: inline-block;">
-                <i class="fas fa-cog" style="margin-right: 6px;"></i> Inicializar Saldos
-            </a>
+    {% if not saldos_listos %}
+        <div style="margin: 0 0 25px 0; padding: 18px 24px; background: #fff3cd; border-left: 6px solid #ffc107; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 28px; color: #ff9800;"></i>
+                <div>
+                    <div style="font-size: 16px; font-weight: bold; color: #856404; margin-bottom: 4px;">
+                        Debe inicializar los saldos antes de operar
+                    </div>
+                    <div style="font-size: 14px; color: #856404;">
+                        Es el primer paso obligatorio del sistema. Vaya al botón <strong>"Inicializar Saldos"</strong>
+                        (abajo, junto al selector de cuenta)
+                        y rellene los valores iniciales para CUP, ANIR y PRESUPUESTO.
+                    </div>
+                </div>
+            </div>
         </div>
     {% endif %}
 
-    <div style="display: flex; gap: 20px;">
+    <div style="padding-left: 120px; padding-right: 120px;">
 
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+        <div id="content-main" style="display: flex; gap: 30px; flex-wrap: wrap; margin-bottom: 30px;">
 
-            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 20px; color: #1a88ff; margin-bottom: 5px;">
-                    <i class="fas fa-building"></i>
+            <div class="module" style="flex: 1; min-width: 400px; border: 1px solid #1a88ff; border-radius: 8px; overflow: hidden;">
+                <div style="background: #1a88ff; color: white; padding: 12px 15px; font-size: 18px; font-weight: bold;">
+                    <i class="fas fa-file-invoice" style="margin-right: 8px;"></i>Gestión de Pagos
                 </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 3px;">Saldo de Empresa</div>
-                <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_empresa }}</div>
+                <table style="width: 100%;">
+                    <tbody>
+                    {% for app in app_list %}
+                        {% for model in app.models %}
+                            {% if model.object_name == "SolicitudesDePago" %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
+                                            <i class="fas fa-file-invoice" style="margin-right: 8px; color: #1a88ff;"></i>
+                                            {{ model.name }}
+                                        </a>
+                                    </th>
+                                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
+                                                <i class="fas fa-plus"></i> Añadir
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ model.admin_url }}" class="changelink">
+                                            <i class="fas fa-pencil-alt"></i> Modificar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% for app in app_list %}
+                        {% for model in app.models %}
+                            {% if model.object_name == "OperacionesEmitidas" %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
+                                            <i class="fas fa-exchange-alt" style="margin-right: 8px; color: #1a88ff;"></i>
+                                            {{ model.name }}
+                                        </a>
+                                    </th>
+                                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee; padding-left: 60px;">
+                                        <a href="{{ model.admin_url }}" class="changelink">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% for app in app_list %}
+                        {% for model in app.models %}
+                            {% if model.object_name == "Proveedores" %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
+                                            <i class="fas fa-truck" style="margin-right: 8px; color: #1a88ff;"></i>
+                                            {{ model.name }}
+                                        </a>
+                                    </th>
+                                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
+                                                <i class="fas fa-plus"></i> Añadir
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ model.admin_url }}" class="changelink">
+                                            <i class="fas fa-pencil-alt"></i> Modificar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 20px; color: #17a2b8; margin-bottom: 5px;">
-                    <i class="fas fa-calculator"></i>
+            <div class="module" style="flex: 1; min-width: 400px; border: 1px solid #28a745; border-radius: 8px; overflow: hidden;">
+                <div style="background: #28a745; color: white; padding: 12px 15px; font-size: 18px; font-weight: bold;">
+                    <i class="fas fa-university" style="margin-right: 8px;"></i>Otras Operaciones
                 </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 3px;">Saldo de Empresa Calculado</div>
-                <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_empresa_calculado }}</div>
+                <table style="width: 100%;">
+                    <tbody>
+                    {% for app in app_list %}
+                        {% for model in app.models %}
+                            {% if model.object_name == "Ingreso" %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
+                                            <i class="fas fa-hand-holding-usd" style="margin-right: 8px; color: #28a745;"></i>
+                                            {{ model.name }}
+                                        </a>
+                                    </th>
+                                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
+                                                <i class="fas fa-plus"></i> Añadir
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ model.admin_url }}" class="changelink">
+                                            <i class="fas fa-pencil-alt"></i> Modificar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% for app in app_list %}
+                        {% for model in app.models %}
+                            {% if model.object_name == "ServicioBancario" %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
+                                            <i class="fas fa-university" style="margin-right: 8px; color: #28a745;"></i>
+                                            {{ model.name }}
+                                        </a>
+                                    </th>
+                                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
+                                                <i class="fas fa-plus"></i> Añadir
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ model.admin_url }}" class="changelink">
+                                            <i class="fas fa-pencil-alt"></i> Modificar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% for app in app_list %}
+                        {% for model in app.models %}
+                            {% if model.object_name == "AjusteInversiones" %}
+                                <tr class="model-{{ model.object_name|lower }}">
+                                    <th scope="row" style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        <a href="{{ model.admin_url }}" style="color: #000; text-decoration: none; font-size: 15px;">
+                                            <i class="fas fa-chart-line" style="margin-right: 8px; color: #28a745;"></i>
+                                            {{ model.name }}
+                                        </a>
+                                    </th>
+                                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="addlink" style="margin-right: 10px;">
+                                                <i class="fas fa-plus"></i> Añadir
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ model.admin_url }}" class="changelink">
+                                            <i class="fas fa-pencil-alt"></i> Modificar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px; flex-wrap: wrap;">
+            <form method="get" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+                <label for="id_cuenta" style="font-weight: bold; color: #333;">Cuenta de Empresa:</label>
+                <select id="id_cuenta" name="cuenta" onchange="this.form.submit();"
+                        style="padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+                    {% for c in cuentas %}
+                        <option value="{{ c }}" {% if c == cuenta_actual %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            {% if request.user.is_superuser %}
+                <a href="{% url 'inicializar_saldos' %}"
+                   style="background-color: #6f42c1; color: white; padding: 8px 18px; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: bold; display: inline-block;">
+                    <i class="fas fa-cog" style="margin-right: 6px;"></i> Inicializar Saldos
+                </a>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 20px; margin-bottom: 40px;">
+
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 160px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 28px; color: #1a88ff; margin-bottom: 10px;">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div style="font-size: 15px; color: #666; margin-bottom: 6px;">Saldo de Empresa</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #333;">{{ saldo_empresa }}</div>
+                </div>
+
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 160px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 28px; color: #17a2b8; margin-bottom: 10px;">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div style="font-size: 15px; color: #666; margin-bottom: 6px;">Saldo de Empresa Calculado</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #333;">{{ saldo_empresa_calculado }}</div>
+                </div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 160px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 28px; color: #28a745; margin-bottom: 10px;">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div style="font-size: 15px; color: #666; margin-bottom: 6px;">Saldo de Banco</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #333;">{{ saldo_banco }}</div>
+                </div>
+
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 160px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 28px; color: #ffc107; margin-bottom: 10px;">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div style="font-size: 15px; color: #666; margin-bottom: 6px;">Tránsito</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #333;">{{ transito }}</div>
+                </div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 160px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 28px; color: #6f42c1; margin-bottom: 10px;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div style="font-size: 15px; color: #666; margin-bottom: 6px;">Saldo de Inversiones</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #333;">{{ saldo_inversiones }}</div>
+                </div>
+
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 160px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 28px; color: #fd7e14; margin-bottom: 10px;">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div style="font-size: 15px; color: #666; margin-bottom: 6px;">Saldo de Operaciones</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #333;">{{ saldo_operaciones }}</div>
+                </div>
             </div>
 
         </div>
-
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
-
-            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 20px; color: #28a745; margin-bottom: 5px;">
-                    <i class="fas fa-university"></i>
-                </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 3px;">Saldo de Banco</div>
-                <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_banco }}</div>
-            </div>
-
-            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 20px; color: #ffc107; margin-bottom: 5px;">
-                    <i class="fas fa-truck"></i>
-                </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 3px;">Tránsito</div>
-                <div style="font-size: 24px; font-weight: bold; color: #333;">{{ transito }}</div>
-            </div>
-
-        </div>
-
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
-
-            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 20px; color: #6f42c1; margin-bottom: 5px;">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 3px;">Saldo de Inversiones</div>
-                <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_inversiones }}</div>
-            </div>
-
-            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px 80px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 20px; color: #fd7e14; margin-bottom: 5px;">
-                    <i class="fas fa-cogs"></i>
-                </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 3px;">Saldo de Operaciones</div>
-                <div style="font-size: 24px; font-weight: bold; color: #333;">{{ saldo_operaciones }}</div>
-            </div>
-
-        </div>
-
     </div>
-
-</div>
 {% endblock %}
