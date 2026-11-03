@@ -146,11 +146,10 @@
             margin-left: 20px;
             padding-left: 5px;
             padding-bottom: 0;
-            padding-top: 4px;
+            padding-top: 0;
             text-align: left;
             font-size: 11pt;
-            height: 22px;
-            line-height: 22px;
+            line-height: 1;
             vertical-align: bottom;
             display: block;
         }
@@ -171,13 +170,12 @@
             border-bottom: 1.5px solid #000;
             padding-left: 5px;
             padding-bottom: 0;
-            padding-top: 4px;
+            padding-top: 0;
             display: inline-block;
             width: 85%;
             text-align: left;
             font-size: 11pt;
-            height: 22px;
-            line-height: 22px;
+            line-height: 1;
             vertical-align: bottom;
         }
 
@@ -319,7 +317,8 @@
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td width="45%" style="padding-bottom: 6px; padding-top: 0px; vertical-align: bottom;">
-                <span class="label" style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
+                <span class="label"
+                      style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
                     EL IMPORTE DE: $
                 </span>
                 <span style="display: inline-block; border-bottom: 1px solid #000; width: 100px; padding-left: 5px; padding-bottom: 0px; padding-top: 0px; vertical-align: bottom; font-size: 11pt; line-height: 1.1;">
@@ -328,7 +327,8 @@
             </td>
 
             <td width="55%" style="padding-bottom: 6px; padding-top: 0px; vertical-align: bottom; padding-left: 15px;">
-                <span class="label" style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
+                <span class="label"
+                      style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
                     CUENTA DE EMPRESA:
                 </span>
                 <span style="display: inline-block; border-bottom: 1px solid #000; width: 120px; padding-left: 5px; padding-bottom: 0px; padding-top: 0px; vertical-align: bottom; font-size: 11pt; line-height: 1.1;">
@@ -359,6 +359,12 @@
             <!-- TABLA DE CONCEPTOS -->
             <table class="table-conceptos">
                 <thead>
+                <tr>
+                    <td colspan="2"
+                        style="text-align: left; padding-left: 5px; font-size: 11pt; padding-top: 0px; padding-bottom: 2px;">
+                        POR LOS SIGUIENTES CONCEPTOS:
+                    </td>
+                </tr>
                 <tr>
                     <th width="60%" class="th-concepto">CONCEPTO</th>
                     <th width="40%">IMPORTE</th>
@@ -413,13 +419,12 @@
                 <!-- TOTAL -->
                 <tr>
                     <td>
-                        <div class="right"
-                             style="font-weight: bold; padding-right: 30px; padding-top: 6px; vertical-align: bottom;">
+                        <div style="text-align: left; padding-left: 210px; padding-top: 6px;">
                             TOTAL
                         </div>
                     </td>
                     <td>
-                        <div class="linea-importe-contenedor" style="font-weight: bold;">
+                        <div class="linea-importe-contenedor">
                             <span class="simbolo-peso">$</span><span
                                 class="linea-importe">{{ solicitud.importe_total }}</span>
                         </div>
@@ -432,30 +437,32 @@
     {% endwith %}
 
     <!-- CHEQUE / RECIBIDO POR -->
-    <table class="b-top">
+    <table style="width: 100%; border-collapse: collapse;">
         <tr>
-            <td width="30%" style="padding-top: 15px;">
+            <td width="30%" style="padding-top: 15px; padding-bottom: 10px;">
                 <span class="label">CHEQUE No.:</span>
                 <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 130px;"></span>
             </td>
-            <td width="30%" style="padding-top: 15px;">
+            <td width="30%" style="padding-top: 15px; padding-bottom: 10px;">
                 <span class="label">FECHA:</span>
                 <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 130px;"></span>
             </td>
-            <td width="40%" style="padding-top: 15px;">
+            <td width="40%" style="padding-top: 15px; padding-bottom: 10px;">
                 <span class="label">IMPORTE: $</span>
-                <span style="font-weight: bold; margin-left: 10px; font-size: 11pt;">{{ solicitud.importe_total }}</span>
+                <!-- CAMBIO: Sin negrita -->
+                <span style="margin-left: 10px; font-size: 11pt;">{{ solicitud.importe_total }}</span>
             </td>
         </tr>
         <tr>
-            <td colspan="3" style="padding-top: 25px;">
+            <!-- CAMBIO: Sin border-top -->
+            <td colspan="3" style="padding-top: 10px; padding-bottom: 25px;">
                 <span class="label">RECIBIDO POR:</span>
                 <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 350px; margin-left: 10px;"></span>
                 <span class="label" style="margin-left: 20px;">Carnet de Identidad</span>
             </td>
         </tr>
         <tr>
-            <td colspan="3" class="center" style="padding-top: 40px; padding-bottom: 15px;">
+            <td colspan="3" class="center" style="padding-top: 10px; padding-bottom: 15px;">
                 <span style="border-top: 1.5px solid #000; display: inline-block; width: 220px; text-align: center; font-size: 9.5pt;">Firma</span>
             </td>
         </tr>
