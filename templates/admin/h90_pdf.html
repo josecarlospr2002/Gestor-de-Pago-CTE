@@ -436,34 +436,64 @@
         {% endwith %}
     {% endwith %}
 
-    <!-- CHEQUE / RECIBIDO POR -->
-    <table style="width: 100%; border-collapse: collapse;">
+    <!-- CHEQUE / RECIBIDO POR / FIRMA -->
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+
         <tr>
-            <td width="30%" style="padding-top: 15px; padding-bottom: 10px;">
-                <span class="label">CHEQUE No.:</span>
-                <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 130px;"></span>
-            </td>
-            <td width="30%" style="padding-top: 15px; padding-bottom: 10px;">
-                <span class="label">FECHA:</span>
-                <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 130px;"></span>
-            </td>
-            <td width="40%" style="padding-top: 15px; padding-bottom: 10px;">
-                <span class="label">IMPORTE: $</span>
-                <!-- CAMBIO: Sin negrita -->
-                <span style="margin-left: 10px; font-size: 11pt;">{{ solicitud.importe_total }}</span>
+            <td colspan="3"
+                style="padding-top: 15px; padding-bottom: 10px; vertical-align: bottom; white-space: nowrap;">
+
+                <span style="margin-right: 40px;">
+                    <span style="font-size: 11pt;">CHEQUE No.: _______________</span>
+                    <span style="display: inline-block; border-bottom: 1.5px solid #000; width: 90px; margin-left: 5px; height: 15px;"></span>
+                </span>
+
+                <span style="margin-right: 40px;">
+                    <span style="font-size: 11pt;">FECHA: _______________</span>
+                    <span style="display: inline-block; border-bottom: 1.5px solid #000; width: 90px; margin-left: 5px; height: 15px;"></span>
+                </span>
+
+                <span>
+                    <span style="font-size: 11pt;">IMPORTE $:</span>
+                    <span style="display: inline-block; border-bottom: 1.5px solid #000; width: 100px; margin-left: 5px; text-align: center; height: 14px; vertical-align: bottom; line-height: 1;">
+                        {{ solicitud.importe_total }}
+                    </span>
+                </span>
+
             </td>
         </tr>
+
         <tr>
-            <!-- CAMBIO: Sin border-top -->
-            <td colspan="3" style="padding-top: 10px; padding-bottom: 25px;">
-                <span class="label">RECIBIDO POR:</span>
-                <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 350px; margin-left: 10px;"></span>
-                <span class="label" style="margin-left: 20px;">Carnet de Identidad</span>
+            <td width="17%"
+                style="padding-top: 15px; padding-bottom: 2px; vertical-align: bottom; white-space: nowrap;">
+                <span class="label" style="font-size: 11pt;">RECIBIDO POR:</span>
+            </td>
+
+            <td width="58%" style="padding-top: 15px; padding-bottom: 2px; vertical-align: bottom;">
+                <div style="display: inline-block; width: 100%;">
+                    <div style="border-bottom: 1.5px solid #000; width: 100%; height: 14px;"></div>
+                    <div style="text-align: center; font-size: 8.5pt; line-height: 1; margin-top: 2px;">Nombre y
+                        Apellidos
+                    </div>
+                </div>
+            </td>
+
+            <td width="25%" style="padding-top: 15px; padding-bottom: 2px; vertical-align: bottom; text-align: right;">
+                <div style="display: inline-block; width: 160px;">
+                    <div style="border-bottom: 1.5px solid #000; width: 100%; height: 14px;"></div>
+                    <div style="text-align: center; font-size: 8.5pt; line-height: 1; margin-top: 2px;">Carnet de
+                        Identidad
+                    </div>
+                </div>
             </td>
         </tr>
+
         <tr>
-            <td colspan="3" class="center" style="padding-top: 10px; padding-bottom: 15px;">
-                <span style="border-top: 1.5px solid #000; display: inline-block; width: 220px; text-align: center; font-size: 9.5pt;">Firma</span>
+            <td colspan="3" class="center" style="padding-top: 35px; padding-bottom: 20px; text-align: center;">
+                <div style="display: inline-block; width: 250px;">
+                    <div style="border-bottom: 1.5px solid #000; width: 100%; height: 14px;"></div>
+                    <div style="text-align: center; font-size: 9pt; line-height: 1; margin-top: 2px;">Firma</div>
+                </div>
             </td>
         </tr>
     </table>
