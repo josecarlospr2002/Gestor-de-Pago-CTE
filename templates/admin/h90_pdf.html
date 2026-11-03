@@ -37,16 +37,8 @@
             border-top: 3px solid #000;
         }
 
-        .b-bottom {
-            border-bottom: 1.5px solid #000;
-        }
-
         .b-left {
             border-left: 3px solid #000;
-        }
-
-        .b-right {
-            border-right: 1.5px solid #000;
         }
 
         /* CABECERA */
@@ -97,24 +89,8 @@
             font-weight: normal;
         }
 
-        .input-line {
-            border-bottom: 1.5px solid #000;
-            height: 20px; /* Más alto */
-            line-height: 20px;
-            vertical-align: bottom;
-            font-size: 11pt;
-            display: block;
-            margin: 0;
-            padding: 0;
-            padding-top: 6px;
-        }
-
         .center {
             text-align: center;
-        }
-
-        .right {
-            text-align: right;
         }
 
         /* TABLA DE CONCEPTOS */
@@ -141,9 +117,9 @@
         }
 
         .linea-concepto {
-            width: 92%;
-            border-bottom: 1.5px solid #000;
-            margin-left: 20px;
+            width: 85%;
+            border-bottom: 1px solid #000;
+            margin-left: 15px;
             padding-left: 5px;
             padding-bottom: 0;
             padding-top: 0;
@@ -155,8 +131,8 @@
         }
 
         .linea-importe-contenedor {
-            width: 80%;
-            margin-left: 30px;
+            width: 85%;
+            margin-left: 15px;
             display: block;
             vertical-align: bottom;
         }
@@ -167,12 +143,12 @@
         }
 
         .linea-importe {
-            border-bottom: 1.5px solid #000;
+            border-bottom: 1px solid #000;
             padding-left: 5px;
             padding-bottom: 0;
             padding-top: 0;
             display: inline-block;
-            width: 85%;
+            width: 80%;
             text-align: left;
             font-size: 11pt;
             line-height: 1;
@@ -185,7 +161,7 @@
 
         .firmas-box td {
             border-right: 1.5px solid #000;
-            border-bottom: 1.5px solid #000;
+            border-bottom: 1px solid #000;
             height: 70px;
             font-size: 9pt;
             vertical-align: top;
@@ -195,11 +171,6 @@
 
         .firmas-box td:last-child {
             border-right: none;
-        }
-
-        .carguese-box {
-            height: 90px;
-            border-top: 1.5px solid #000;
         }
 
         .carguese-box td {
@@ -321,7 +292,7 @@
                       style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
                     EL IMPORTE DE: $
                 </span>
-                <span style="display: inline-block; border-bottom: 1px solid #000; width: 100px; padding-left: 5px; padding-bottom: 0px; padding-top: 0px; vertical-align: bottom; font-size: 11pt; line-height: 1.1;">
+                <span style="display: inline-block; border-bottom: 1px solid #000; width: 140px; padding-left: 5px; padding-bottom: 0px; padding-top: 0px; vertical-align: bottom; font-size: 11pt; line-height: 1.1;">
                     {{ solicitud.importe_total }}
                 </span>
             </td>
@@ -356,30 +327,32 @@
     {% with num_normales=solicitud.conceptos_normales.count num_salarios=solicitud.conceptos_salarios.count %}
         {% with total_conceptos=num_normales|add:num_salarios %}
 
-            <!-- TABLA DE CONCEPTOS -->
+            <!-- TABLA DE CONCEPTOS RECONSTRUIDA -->
             <table class="table-conceptos">
                 <thead>
                 <tr>
                     <td colspan="2"
-                        style="text-align: left; padding-left: 5px; font-size: 11pt; padding-top: 0px; padding-bottom: 2px;">
+                        style="text-align: left; padding-left: 5px; font-size: 11pt; padding-top: 5px; padding-bottom: 2px;">
                         POR LOS SIGUIENTES CONCEPTOS:
                     </td>
                 </tr>
                 <tr>
-                    <th width="60%" class="th-concepto">CONCEPTO</th>
-                    <th width="40%">IMPORTE</th>
+                    <th width="60%" class="th-concepto"
+                        style="text-align: center; font-weight: normal; padding: 8px 0;">CONCEPTO
+                    </th>
+                    <th width="40%" style="text-align: center; font-weight: normal; padding: 8px 0;">IMPORTE</th>
                 </tr>
                 </thead>
                 <tbody>
                 <!-- Conceptos Reales Normales -->
                 {% for c in solicitud.conceptos_normales.all %}
                     <tr>
-                        <td>
+                        <td style="vertical-align: bottom;">
                             <div class="linea-concepto">{{ c.concepto }} {{ c.numero|default:"" }}</div>
                         </td>
-                        <td>
+                        <td style="vertical-align: bottom;">
                             <div class="linea-importe-contenedor">
-                                <span class="simbolo-peso">$</span><span class="linea-importe">{{ c.importe }}</span>
+                                <div class="linea-importe" style="width: 90%;">$ {{ c.importe }}</div>
                             </div>
                         </td>
                     </tr>
@@ -388,27 +361,28 @@
                 <!-- Conceptos Reales Salarios -->
                 {% for c in solicitud.conceptos_salarios.all %}
                     <tr>
-                        <td>
+                        <td style="vertical-align: bottom;">
                             <div class="linea-concepto">{{ c.concepto }}</div>
                         </td>
-                        <td>
+                        <td style="vertical-align: bottom;">
                             <div class="linea-importe-contenedor">
-                                <span class="simbolo-peso">$</span><span class="linea-importe">{{ c.importe }}</span>
+                                <div class="linea-importe" style="width: 90%;">$ {{ c.importe }}</div>
                             </div>
                         </td>
                     </tr>
                 {% endfor %}
 
+                <!-- Filas en blanco -->
                 {% if total_conceptos < 8 %}
                     {% for i in "12345678"|make_list %}
                         {% if forloop.counter > total_conceptos %}
                             <tr>
-                                <td>
+                                <td style="vertical-align: bottom;">
                                     <div class="linea-concepto">&nbsp;</div>
                                 </td>
-                                <td>
+                                <td style="vertical-align: bottom;">
                                     <div class="linea-importe-contenedor">
-                                        <span class="simbolo-peso">$</span><span class="linea-importe">&nbsp;</span>
+                                        <div class="linea-importe" style="width: 90%;">&nbsp;</div>
                                     </div>
                                 </td>
                             </tr>
@@ -418,15 +392,14 @@
 
                 <!-- TOTAL -->
                 <tr>
-                    <td>
-                        <div style="text-align: left; padding-left: 210px; padding-top: 6px;">
+                    <td style="vertical-align: bottom;">
+                        <div style="text-align: right; padding-right: 15px; padding-top: 6px; padding-bottom: 2px;">
                             TOTAL
                         </div>
                     </td>
-                    <td>
+                    <td style="vertical-align: bottom;">
                         <div class="linea-importe-contenedor">
-                            <span class="simbolo-peso">$</span><span
-                                class="linea-importe">{{ solicitud.importe_total }}</span>
+                            <div class="linea-importe" style="width: 90%;">$ {{ solicitud.importe_total }}</div>
                         </div>
                     </td>
                 </tr>
@@ -445,17 +418,17 @@
 
                 <span style="margin-right: 40px;">
                     <span style="font-size: 11pt;">CHEQUE No.: _______________</span>
-                    <span style="display: inline-block; border-bottom: 1.5px solid #000; width: 90px; margin-left: 5px; height: 15px;"></span>
+                    <span style="display: inline-block; border-bottom: 1px solid #000; width: 90px; margin-left: 5px; height: 15px;"></span>
                 </span>
 
                 <span style="margin-right: 40px;">
                     <span style="font-size: 11pt;">FECHA: _______________</span>
-                    <span style="display: inline-block; border-bottom: 1.5px solid #000; width: 90px; margin-left: 5px; height: 15px;"></span>
+                    <span style="display: inline-block; border-bottom: 1px solid #000; width: 90px; margin-left: 5px; height: 15px;"></span>
                 </span>
 
                 <span>
                     <span style="font-size: 11pt;">IMPORTE $:</span>
-                    <span style="display: inline-block; border-bottom: 1.5px solid #000; width: 100px; margin-left: 5px; text-align: center; height: 14px; vertical-align: bottom; line-height: 1;">
+                    <span style="display: inline-block; border-bottom: 1px solid #000; width: 140px; margin-left: 5px; text-align: center; height: 14px; vertical-align: bottom; line-height: 1;">
                         {{ solicitud.importe_total }}
                     </span>
                 </span>
@@ -471,7 +444,7 @@
 
             <td width="58%" style="padding-top: 15px; padding-bottom: 2px; vertical-align: bottom;">
                 <div style="display: inline-block; width: 100%;">
-                    <div style="border-bottom: 1.5px solid #000; width: 100%; height: 14px;"></div>
+                    <div style="border-bottom: 1px solid #000; width: 100%; height: 14px;"></div>
                     <div style="text-align: center; font-size: 8.5pt; line-height: 1; margin-top: 2px;">Nombre y
                         Apellidos
                     </div>
@@ -480,7 +453,7 @@
 
             <td width="25%" style="padding-top: 15px; padding-bottom: 2px; vertical-align: bottom; text-align: right;">
                 <div style="display: inline-block; width: 160px;">
-                    <div style="border-bottom: 1.5px solid #000; width: 100%; height: 14px;"></div>
+                    <div style="border-bottom: 1px solid #000; width: 100%; height: 14px;"></div>
                     <div style="text-align: center; font-size: 8.5pt; line-height: 1; margin-top: 2px;">Carnet de
                         Identidad
                     </div>
@@ -489,9 +462,9 @@
         </tr>
 
         <tr>
-            <td colspan="3" class="center" style="padding-top: 35px; padding-bottom: 20px; text-align: center;">
+            <td colspan="3" class="center" style="padding-top: 20px; padding-bottom: 8px; text-align: center;">
                 <div style="display: inline-block; width: 250px;">
-                    <div style="border-bottom: 1.5px solid #000; width: 100%; height: 14px;"></div>
+                    <div style="border-bottom: 1px solid #000; width: 100%; height: 14px;"></div>
                     <div style="text-align: center; font-size: 9pt; line-height: 1; margin-top: 2px;">Firma</div>
                 </div>
             </td>
@@ -499,36 +472,54 @@
     </table>
 
     <!-- FIRMAS -->
-    <table class="firmas-box">
+    <table class="firmas-box" style="border-top: 3px solid #000; border-bottom: none;">
         <tr>
-            <td width="33%">AUTORIZADO EL GASTO</td>
-            <td width="34%">APROBADO EL PAGO</td>
-            <td width="33%">AUTORIZADO EL PAGO</td>
+            <td width="33%" style="border-right: 3px solid #000; border-bottom: none; padding-top: 15px;">AUTORIZADO EL
+                GASTO
+            </td>
+            <td width="34%" style="border-right: 3px solid #000; border-bottom: none; padding-top: 15px;">APROBADO EL
+                PAGO
+            </td>
+            <td width="33%" style="border-bottom: none; padding-top: 15px;">AUTORIZADO EL PAGO</td>
         </tr>
     </table>
 
     <!-- CÁRGUESE A -->
-    <table class="carguese-box">
-        <tr>
-            <td colspan="5" style="text-align: left; padding-left: 8px; padding-top: 10px; font-weight: bold;">CÁRGUESE
-                A:
-            </td>
-        </tr>
-        <tr>
-            <td width="15%">CTA</td>
-            <td width="15%">SUBCTA</td>
-            <td width="20%">SUBCONTROL</td>
-            <td width="20%">ANÁLISIS</td>
-            <td width="30%">IMPORTE</td>
-        </tr>
-        <tr>
-            <td colspan="5" class="right" style="padding-right: 20px; padding-top: 30px;">
-                <span class="label">CO No.</span>
-                <span style="border-bottom: 1.5px solid #000; display: inline-block; width: 120px;"></span>
-            </td>
-        </tr>
-    </table>
+    <div style="width: 100%; border-top: 4px solid #000; padding-bottom: 20px;">
 
+        <div style="text-align: left; padding-left: 8px; padding-top: 10px;">
+            CÁRGUESE A:
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 5px; border: none;">
+            <tr>
+                <td width="15%"
+                    style="border: none; text-align: left; padding-left: 15px; font-size: 9pt;">CTA
+                </td>
+                <td width="15%"
+                    style="border: none; text-align: center; padding-left: 15px; font-size: 9pt;">
+                    SUBCTA
+                </td>
+                <td width="20%"
+                    style="border: none; text-align: center; padding-left: 76px; font-size: 9pt;">
+                    SUBCONTROL
+                </td>
+                <td width="20%"
+                    style="border: none; text-align: center; padding-left: 80px; font-size: 9pt;">
+                    ANÁLISIS
+                </td>
+                <td width="30%"
+                    style="border: none; text-align: center; padding-left: 14px; vertical-align: top; font-size: 9pt;">
+                    IMPORTE<br>
+                    <div style="margin-top: 32px; padding-right: 80px; text-align: right;">
+                        <span class="label">CO No.</span>
+                        <span style="border-bottom: 1px solid #000; display: inline-block; width: 120px;"></span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
 </div>
 
 </body>
