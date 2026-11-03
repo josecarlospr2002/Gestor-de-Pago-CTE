@@ -227,7 +227,7 @@
         </tr>
     </table>
 
-        <!-- ENTIDAD / CENTRO COSTO / FECHA -->
+    <!-- ENTIDAD / CENTRO COSTO / FECHA -->
     <table class="b-top">
         <tr>
             <td width="45%" style="padding-top: 18px; padding-bottom: 6px; vertical-align: top;">
@@ -242,7 +242,8 @@
                 <span class="label" style="display: block; line-height: 1; margin-bottom: 0px;">CENTRO DE</span>
 
                 <div style="margin-top: 2px;">
-                    <span class="label" style="line-height: 1;">COSTO: </span><span style="letter-spacing: 2px; font-size: 12pt; font-weight: bold; vertical-align: bottom;">____________</span>
+                    <span class="label" style="line-height: 1;">COSTO: </span><span
+                        style="letter-spacing: 2px; font-size: 12pt; font-weight: bold; vertical-align: bottom;">____________</span>
                 </div>
             </td>
 
@@ -259,47 +260,95 @@
     <!-- PÁGUESE A / CUENTA / CÓDIGO / DIRECCIÓN -->
     <table class="b-top">
         <tr>
-            <td colspan="2" style="padding-bottom: 6px;">
-                <span class="label">PÁGUESE A:</span><br>
-                <div class="input-line">{{ solicitud.nombre_del_proveedor|default:"&nbsp;" }}</div>
+            <td colspan="2" style="padding-top: 18px; padding-bottom: 6px;">
+                <div style="line-height: 1;">
+                    <span class="label" style="vertical-align: bottom; display: inline-block; line-height: 1.2;">PÁGUESE A: </span>
+                    <span style="display: inline-block; vertical-align: bottom; border-bottom: 1px solid #000; width: 82%; padding-left: 15px; padding-bottom: 0px; line-height: 1.2; font-size: 11pt;">
+                        {{ solicitud.nombre_del_proveedor|default:"&nbsp;" }}
+                    </span>
+                </div>
             </td>
         </tr>
-        <tr>
-            <td width="60%" style="padding-bottom: 6px;">
-                <span class="label">CUENTA BNC:</span><br>
-                <div class="input-line">{{ solicitud.cuenta_bancaria|default:"&nbsp;" }}</div>
+
+        <tr style="border-top: none;">
+            <td width="50%"
+                style="padding-bottom: 6px; border-top: none !important; padding-top: 15px; padding-right: 15px;">
+                <div style="display: flex; align-items: flex-end; width: 100%; line-height: 1;">
+                    <div style="white-space: nowrap; padding-right: 5px;">
+                        <span class="label" style="vertical-align: bottom;">CUENTA BANC:</span>
+                    </div>
+                    <div style="flex-grow: 1; border-bottom: 1px solid #000; padding-left: 10px;">
+                        <span style="font-size: 11pt; line-height: 1; vertical-align: bottom; display: block;">
+                            {{ solicitud.cuenta_bancaria|default:"&nbsp;" }}
+                        </span>
+                    </div>
+                </div>
             </td>
-            <td width="40%" style="padding-bottom: 6px;">
-                <span class="label">CÓDIGO:</span><br>
-                <div class="input-line">{{ solicitud.codigo_del_proveedor|default:"&nbsp;" }}</div>
+
+            <td width="50%"
+                style="padding-bottom: 6px; border-top: none !important; padding-top: 15px; padding-left: 15px;">
+                <div style="display: flex; align-items: flex-end; width: 100%; line-height: 1;">
+                    <div style="white-space: nowrap; padding-right: 5px;">
+                        <span class="label" style="vertical-align: bottom;">CÓDIGO:</span>
+                    </div>
+                    <div style="flex-grow: 1; border-bottom: 1px solid #000; padding-left: 10px;">
+                        <span style="font-size: 11pt; line-height: 1; vertical-align: bottom; display: block;">
+                            {{ solicitud.codigo_del_proveedor|default:"&nbsp;" }}
+                        </span>
+                    </div>
+                </div>
             </td>
         </tr>
-        <tr>
-            <td colspan="2" style="padding-bottom: 6px;">
-                <span class="label">DIRECCIÓN:</span><br>
-                <div class="input-line">{{ solicitud.direccion_proveedor|default:"&nbsp;" }}</div>
+
+        <tr style="border-top: none;">
+            <td colspan="2" style="padding-bottom: 6px; border-top: none !important; padding-top: 10px;">
+                <span class="label"
+                      style="display: inline-block; vertical-align: top; width: 85px; padding-top: 2px; line-height: 1.5;">
+                    DIRECCIÓN:
+                </span>
+                <span style="display: inline-block; vertical-align: top; width: 88%; margin-right: 5px; padding-left: 5px;">
+                    <span style="font-size: 11pt; line-height: 1.5; text-decoration: underline; display: inline;">
+                        {{ solicitud.direccion_proveedor|default:"&nbsp;" }}
+                    </span>
+                </span>
             </td>
         </tr>
     </table>
 
-    <!-- IMPORTES -->
-    <table class="b-top">
+    <!-- IMPORTES / CUENTA DE EMPRESA -->
+    <table style="width: 100%; border-collapse: collapse;">
         <tr>
-            <td width="30%" style="padding-bottom: 6px;">
-                <span class="label">EL IMPORTE DE: $</span><br>
-                <div class="input-line" style="font-weight: bold;">{{ solicitud.importe_total }}</div>
+            <td width="45%" style="padding-bottom: 6px; padding-top: 0px; vertical-align: bottom;">
+                <span class="label" style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
+                    EL IMPORTE DE: $
+                </span>
+                <span style="display: inline-block; border-bottom: 1px solid #000; width: 100px; padding-left: 5px; padding-bottom: 0px; padding-top: 0px; vertical-align: bottom; font-size: 11pt; line-height: 1.1;">
+                    {{ solicitud.importe_total }}
+                </span>
             </td>
-            <td width="70%" style="padding-bottom: 6px;">
-                <span class="label">IMPORTE EN LETRAS:</span><br>
-                <div class="input-line" style="font-style: italic;">{{ solicitud.importe_total_letras }}</div>
+
+            <td width="55%" style="padding-bottom: 6px; padding-top: 0px; vertical-align: bottom; padding-left: 15px;">
+                <span class="label" style="display: inline-block; vertical-align: bottom; white-space: nowrap; line-height: 1.1;">
+                    CUENTA DE EMPRESA:
+                </span>
+                <span style="display: inline-block; border-bottom: 1px solid #000; width: 120px; padding-left: 5px; padding-bottom: 0px; padding-top: 0px; vertical-align: bottom; font-size: 11pt; line-height: 1.1;">
+                    {{ solicitud.cuenta_de_empresa|default:"&nbsp;" }}
+                </span>
             </td>
         </tr>
-    </table>
 
-    <!-- TÍTULO CONCEPTOS -->
-    <table class="b-top">
         <tr>
-            <td style="padding-top: 10px; padding-bottom: 10px; font-size: 10pt;">POR LOS SIGUIENTES CONCEPTOS:</td>
+            <td colspan="2" style="padding-bottom: 10px; padding-top: 5px; vertical-align: top;">
+                <span class="label" style="display: inline-block; vertical-align: top; white-space: nowrap;">
+                    IMPORTE EN LETRAS:
+                </span>
+
+                <span style="display: inline-block; vertical-align: top; width: 75%; padding-left: 5px;">
+                    <span style="font-size: 11pt; line-height: 1.5; text-decoration: underline; display: inline;">
+                        {{ solicitud.importe_total_letras|default:"&nbsp;" }}
+                    </span>
+                </span>
+            </td>
         </tr>
     </table>
 
