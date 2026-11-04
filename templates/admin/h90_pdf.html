@@ -99,11 +99,10 @@
             border-collapse: collapse;
         }
 
-        .table-conceptos th {
-            text-align: center;
-            font-weight: normal;
-            font-size: 11pt;
-            padding: 8px 0;
+        .table-conceptos td {
+            padding: 0;
+            height: 26px;
+            vertical-align: bottom;
         }
 
         .th-concepto {
@@ -117,9 +116,8 @@
         }
 
         .linea-concepto {
-            width: 85%;
+            width: 100%;
             border-bottom: 1px solid #000;
-            margin-left: 15px;
             padding-left: 5px;
             padding-bottom: 0;
             padding-top: 0;
@@ -128,11 +126,11 @@
             line-height: 1;
             vertical-align: bottom;
             display: block;
+            box-sizing: border-box;
         }
 
         .linea-importe-contenedor {
-            width: 85%;
-            margin-left: 15px;
+            width: 100%;
             display: block;
             vertical-align: bottom;
         }
@@ -147,12 +145,13 @@
             padding-left: 5px;
             padding-bottom: 0;
             padding-top: 0;
-            display: inline-block;
-            width: 80%;
+            display: block;
+            width: 100%;
             text-align: left;
             font-size: 11pt;
             line-height: 1;
             vertical-align: bottom;
+            box-sizing: border-box;
         }
 
         .firmas-box {
@@ -327,7 +326,7 @@
     {% with num_normales=solicitud.conceptos_normales.count num_salarios=solicitud.conceptos_salarios.count %}
         {% with total_conceptos=num_normales|add:num_salarios %}
 
-            <!-- TABLA DE CONCEPTOS RECONSTRUIDA -->
+            <!-- TABLA DE CONCEPTOS -->
             <table class="table-conceptos">
                 <thead>
                 <tr>
@@ -347,12 +346,12 @@
                 <!-- Conceptos Reales Normales -->
                 {% for c in solicitud.conceptos_normales.all %}
                     <tr>
-                        <td style="vertical-align: bottom;">
+                        <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                             <div class="linea-concepto">{{ c.concepto }} {{ c.numero|default:"" }}</div>
                         </td>
-                        <td style="vertical-align: bottom;">
+                        <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                             <div class="linea-importe-contenedor">
-                                <div class="linea-importe" style="width: 90%;">$ {{ c.importe }}</div>
+                                <div class="linea-importe">$ {{ c.importe }}</div>
                             </div>
                         </td>
                     </tr>
@@ -361,12 +360,12 @@
                 <!-- Conceptos Reales Salarios -->
                 {% for c in solicitud.conceptos_salarios.all %}
                     <tr>
-                        <td style="vertical-align: bottom;">
+                        <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                             <div class="linea-concepto">{{ c.concepto }}</div>
                         </td>
-                        <td style="vertical-align: bottom;">
+                        <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                             <div class="linea-importe-contenedor">
-                                <div class="linea-importe" style="width: 90%;">$ {{ c.importe }}</div>
+                                <div class="linea-importe">$ {{ c.importe }}</div>
                             </div>
                         </td>
                     </tr>
@@ -377,12 +376,12 @@
                     {% for i in "12345678"|make_list %}
                         {% if forloop.counter > total_conceptos %}
                             <tr>
-                                <td style="vertical-align: bottom;">
+                                <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                                     <div class="linea-concepto">&nbsp;</div>
                                 </td>
-                                <td style="vertical-align: bottom;">
+                                <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                                     <div class="linea-importe-contenedor">
-                                        <div class="linea-importe" style="width: 90%;">&nbsp;</div>
+                                        <div class="linea-importe">&nbsp;</div>
                                     </div>
                                 </td>
                             </tr>
@@ -392,14 +391,17 @@
 
                 <!-- TOTAL -->
                 <tr>
-                    <td style="vertical-align: bottom;">
-                        <div style="text-align: right; padding-right: 15px; padding-top: 6px; padding-bottom: 2px;">
+                    <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
+                        <div style="text-align: left; padding-left: 180px; padding-top: 6px; padding-bottom: 2px; font-weight: normal; line-height: 1;">
                             TOTAL
                         </div>
                     </td>
-                    <td style="vertical-align: bottom;">
+                    <!-- IMPORTE TOTAL -->
+                    <td style="vertical-align: bottom; padding-left: 15px; padding-right: 15px;">
                         <div class="linea-importe-contenedor">
-                            <div class="linea-importe" style="width: 90%;">$ {{ solicitud.importe_total }}</div>
+                            <div class="linea-importe" style="font-weight: normal; line-height: 1;">
+                                $ {{ solicitud.importe_total }}
+                            </div>
                         </div>
                     </td>
                 </tr>
