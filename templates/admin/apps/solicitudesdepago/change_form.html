@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if original and original.estado == "Emitido" %}
+        <li style="margin-top: 15px;">
+            <a href="/admin/imprimir-h90/{{ original.pk }}/" target="_blank"
+               style="display: block; width: 100%; box-sizing: border-box;
+                      background: #1a88ff; color: white; padding: 10px 15px;
+                      border-radius: 4px; text-decoration: none;
+                      font-weight: bold; text-align: center;">
+                Imprimir H90
+            </a>
+        </li>
+    {% endif %}
+{% endblock %}

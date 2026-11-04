@@ -415,10 +415,41 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
         if mensaje:
             messages.warning(request, mensaje)
 
+    def response_add(self, request, obj, post_url_continue=None):
+        if "_continue" in request.POST:
+            return super().response_add(request, obj, post_url_continue)
+        link_pdf = (
+            f'<a href="/admin/imprimir-h90/{obj.pk}/" target="_blank" '
+            f'style="background: #1a88ff; color: white; padding: 6px 12px; '
+            f'border-radius: 4px; text-decoration: none; margin-left: 15px; '
+            f'font-weight: bold;">🖨️ Imprimir H90</a>'
+        )
+        messages.success(request, format_html(
+            'H90 N° {} guardado correctamente. {}',
+            obj.numero_de_H90,
+            format_html(link_pdf)
+        ))
+        return redirect('admin:apps_solicitudesdepago_changelist')
+
     def response_change(self, request, obj):
         if obj.estado == "Emitido" and not hasattr(obj, '_operacion_creada'):
             return redirect('admin:solicitudesdepago_emitir', pk=obj.pk)
-        return super().response_change(request, obj)
+
+        if "_continue" in request.POST:
+            return super().response_change(request, obj)
+
+        link_pdf = (
+            f'<a href="/admin/imprimir-h90/{obj.pk}/" target="_blank" '
+            f'style="background: #1a88ff; color: white; padding: 6px 12px; '
+            f'border-radius: 4px; text-decoration: none; margin-left: 15px; '
+            f'font-weight: bold;">🖨️ Imprimir H90</a>'
+        )
+        messages.success(request, format_html(
+            'H90 N° {} guardado correctamente. {}',
+            obj.numero_de_H90,
+            format_html(link_pdf)
+        ))
+        return redirect('admin:apps_solicitudesdepago_changelist')
 
     def get_urls(self):
         urls = super().get_urls()
@@ -457,13 +488,9 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
                 fecha_inicial=fecha_inicial,
             )
 
-            # --- BOTÓN PARA IMPRIMIR EL PDF ---
-            link_pdf = f'<a href="/admin/imprimir-h90/{solicitud.pk}/" target="_blank" style="background: #1a88ff; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-left: 15px; font-weight: bold;">🖨️ Imprimir H90</a>'
-
             messages.success(request, format_html(
-                'H90 N° {} emitido correctamente. {}',
+                'H90 N° {} emitido correctamente.',
                 solicitud.numero_de_H90,
-                format_html(link_pdf)
             ))
 
             return redirect('admin:apps_solicitudesdepago_changelist')
