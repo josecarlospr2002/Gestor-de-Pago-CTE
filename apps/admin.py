@@ -11,13 +11,11 @@ from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSala
 from django.utils.html import format_html
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.safestring import mark_safe
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
 
 
 def _saldos_iniciales_listos():
-    """
-    Devuelve True solo si existen los 3 SaldoInicial (CUP, ANIR, PRESUPUESTO).
-    Mientras falte alguno, no se puede crear ninguna operación nueva.
-    """
     cuentas_requeridas = {"CUP", "ANIR", "PRESUPUESTO"}
     cuentas_cargadas = set(
         SaldoInicial.objects.values_list("cuenta_de_empresa", flat=True)
@@ -1149,6 +1147,9 @@ class SaldoInicialAdmin(admin.ModelAdmin):
     )
     list_display_links = list(list_display).copy()
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
     def has_add_permission(self, request):
         return request.user.is_superuser
 
@@ -1159,4 +1160,22 @@ class SaldoInicialAdmin(admin.ModelAdmin):
         return False
 
     def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+# --- OCULTAR GRUPOS Y USUARIOS A LOS QUE NO SON SUPERUSUARIOS ---
+
+admin.site.unregister(User)
+admin.site.unregister(Group)
+
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+
+@admin.register(Group)
+class CustomGroupAdmin(GroupAdmin):
+    def has_module_permission(self, request):
         return request.user.is_superuser
