@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
 
-from apps.views import inicializar_saldos, generar_pdf_h90, generar_pdf_operaciones
+from apps.views import inicializar_saldos, generar_pdf_h90, generar_pdf_operaciones, generar_pdf_ingresos
 
 urlpatterns = [
     path('', lambda request: redirect('admin/login/')),
@@ -11,6 +11,8 @@ urlpatterns = [
     path('admin/imprimir-h90/<int:pk>/', generar_pdf_h90, name='imprimir_h90'),
 
     path('admin/imprimir-operaciones/', generar_pdf_operaciones, name='imprimir_operaciones'),
+
+    path('admin/imprimir-ingresos/', generar_pdf_ingresos, name='imprimir_ingresos'),
 
     path('admin/', admin.site.urls),
 ]

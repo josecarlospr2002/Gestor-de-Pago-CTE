@@ -840,6 +840,18 @@ class IngresoAdmin(admin.ModelAdmin):
     fecha_debito_formateada.short_description = "Fecha Debitó"
     fecha_debito_formateada.admin_order_field = "fecha_debito"
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path("imprimir-ingresos/", self.admin_site.admin_view(self.imprimir_ingresos),
+                 name="ingreso_imprimir"),
+        ]
+        return custom_urls + urls
+
+    def imprimir_ingresos(self, request):
+        query = request.GET.urlencode()
+        return redirect(f"/admin/imprimir-ingresos/?{query}")
+
     def changelist_view(self, request, extra_context=None):
         if not _saldos_iniciales_listos():
             messages.warning(request, MENSAJE_BLOQUEO)
@@ -861,12 +873,27 @@ class IngresoAdmin(admin.ModelAdmin):
 
         extra_context['cantidad_ingresos'] = cantidad_ingresos
         extra_context['importe_total_ingresos'] = formato(importe_total)
+
+        from django.utils.safestring import mark_safe
+
+        query = request.GET.urlencode()
+        url = f"/admin/imprimir-ingresos/?{query}"
+
+        boton_html = mark_safe(
+            f'<a class="btn btn-success btn-sm" '
+            f'href="{url}" target="_blank" '
+            f'style="background-color: #28a745; border-color: #218838; color: white; '
+            f'margin-right: 10px; padding-top: 7px; padding-bottom: 7px; font-weight: bold;">'
+            f'<i class="fas fa-print" style="margin-right: 6px;"></i> Imprimir Tabla</a>'
+        )
+
+        extra_context['boton_imprimir_ingreso'] = boton_html
+
         response.context_data.update(extra_context)
         return response
 
     def get_ordering(self, request):
         return ()
-
 
 # Filtro por Año (Servicios Bancarios)
 class AñoFilterSB(admin.SimpleListFilter):

@@ -1,6 +1,8 @@
 {% extends "admin/change_list.html" %}
 
 {% block object-tools %}
+    {{ boton_imprimir_ingreso }}
+
     <a class="btn btn-primary btn-sm"
        style="background-color: #1a88ff;
               border-color: #0062cc;
@@ -17,7 +19,7 @@
     </a>
 
     <a class="btn btn-success btn-sm"
-        style="background-color: #1a88ff;
+       style="background-color: #1a88ff;
               border-color: #0062cc;
               cursor: default;
               pointer-events: none;

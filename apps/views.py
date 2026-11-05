@@ -7,11 +7,11 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
-from .models import SolicitudesDePago, OperacionesEmitidas
+from .models import SolicitudesDePago, OperacionesEmitidas, Ingreso
 
 from .models import SaldoInicial
 from django.contrib import admin
-from .admin import OperacionesEmitidasAdmin
+from .admin import OperacionesEmitidasAdmin, IngresoAdmin
 
 CUENTAS = ("CUP", "ANIR", "PRESUPUESTO")
 CAMPOS = (
@@ -162,6 +162,47 @@ def generar_pdf_operaciones(request):
     if not pdf.err:
         response = HttpResponse(result.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = 'inline; filename="Operaciones_Emitidas.pdf"'
+        return response
+
+    return HttpResponse('Error al generar el PDF', status=500)
+
+
+@staff_member_required
+def generar_pdf_ingresos(request):
+    model_admin = IngresoAdmin(Ingreso, admin.site)
+
+    qs = model_admin.get_queryset(request)
+    changelist = model_admin.get_changelist_instance(request)
+    queryset_filtrado = changelist.get_queryset(request)
+
+    ingresos = []
+    total_importe = 0
+    for op in queryset_filtrado:
+        ingresos.append({
+            'tipo_ingreso': op.tipo_ingreso,
+            'fecha': op.fecha.strftime("%d/%m/%Y") if op.fecha else "—",
+            'importe': f"{float(op.importe):,.2f}".replace(",", " ").replace(".", ","),
+            'fecha_debito': op.fecha_debito.strftime("%d/%m/%Y") if op.fecha_debito else "—",
+            'concepto': op.concepto or "—",
+        })
+        total_importe += float(op.importe)
+
+    total_importe_str = f"{total_importe:,.2f}".replace(",", " ").replace(".", ",")
+
+    template = get_template('admin/ingresos_pdf.html')
+    context = {
+        'ingresos': ingresos,
+        'cantidad': len(ingresos),
+        'total_importe': total_importe_str,
+    }
+    html = template.render(context)
+
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="Ingresos.pdf"'
         return response
 
     return HttpResponse('Error al generar el PDF', status=500)
