@@ -7,11 +7,11 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
-from .models import SolicitudesDePago, OperacionesEmitidas, Ingreso
+from .models import SolicitudesDePago, OperacionesEmitidas, Ingreso, ServicioBancario
 
 from .models import SaldoInicial
 from django.contrib import admin
-from .admin import OperacionesEmitidasAdmin, IngresoAdmin
+from .admin import OperacionesEmitidasAdmin, IngresoAdmin, ServicioBancarioAdmin
 
 CUENTAS = ("CUP", "ANIR", "PRESUPUESTO")
 CAMPOS = (
@@ -203,6 +203,44 @@ def generar_pdf_ingresos(request):
     if not pdf.err:
         response = HttpResponse(result.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = 'inline; filename="Ingresos.pdf"'
+        return response
+
+    return HttpResponse('Error al generar el PDF', status=500)
+
+
+@staff_member_required
+def generar_pdf_servicios(request):
+    model_admin = ServicioBancarioAdmin(ServicioBancario, admin.site)
+    changelist = model_admin.get_changelist_instance(request)
+    queryset_filtrado = changelist.get_queryset(request)
+
+    servicios = []
+    total_importe = 0
+    for op in queryset_filtrado:
+        servicios.append({
+            'fecha': op.fecha.strftime("%d/%m/%Y") if op.fecha else "—",
+            'importe': f"{float(op.importe):,.2f}".replace(",", " ").replace(".", ","),
+            'clave': op.clave,
+            'descripcion': op.descripcion or "—",
+        })
+        total_importe += float(op.importe)
+
+    total_importe_str = f"{total_importe:,.2f}".replace(",", " ").replace(".", ",")
+
+    template = get_template('admin/servicios_pdf.html')
+    context = {
+        'servicios': servicios,
+        'cantidad': len(servicios),
+        'total_importe': total_importe_str,
+    }
+    html = template.render(context)
+
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="Servicios_Bancarios.pdf"'
         return response
 
     return HttpResponse('Error al generar el PDF', status=500)

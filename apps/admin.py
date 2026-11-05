@@ -965,6 +965,18 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
     fecha_formateada.short_description = "Fecha"
     fecha_formateada.admin_order_field = "fecha"
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path("imprimir-servicios/", self.admin_site.admin_view(self.imprimir_servicios),
+                 name="serviciobancario_imprimir"),
+        ]
+        return custom_urls + urls
+
+    def imprimir_servicios(self, request):
+        query = request.GET.urlencode()
+        return redirect(f"/admin/imprimir-servicios/?{query}")
+
     def changelist_view(self, request, extra_context=None):
         if not _saldos_iniciales_listos():
             messages.warning(request, MENSAJE_BLOQUEO)
@@ -986,6 +998,20 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
 
         extra_context['cantidad_servicios'] = cantidad_servicios
         extra_context['importe_total_servicios'] = formato(importe_total)
+
+        from django.utils.safestring import mark_safe
+        query = request.GET.urlencode()
+        url = f"/admin/imprimir-servicios/?{query}"
+
+        boton_html = mark_safe(
+            f'<a class="btn btn-success btn-sm" '
+            f'href="{url}" target="_blank" '
+            f'style="background-color: #28a745; border-color: #218838; color: white; '
+            f'margin-right: 10px; padding-top: 7px; padding-bottom: 7px; font-weight: bold;">'
+            f'<i class="fas fa-print" style="margin-right: 6px;"></i> Imprimir Tabla</a>'
+        )
+
+        extra_context['boton_imprimir_servicio'] = boton_html
         response.context_data.update(extra_context)
         return response
 
