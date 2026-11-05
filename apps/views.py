@@ -7,9 +7,11 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
-from .models import SolicitudesDePago
+from .models import SolicitudesDePago, OperacionesEmitidas
 
 from .models import SaldoInicial
+from django.contrib import admin
+from .admin import OperacionesEmitidasAdmin
 
 CUENTAS = ("CUP", "ANIR", "PRESUPUESTO")
 CAMPOS = (
@@ -90,7 +92,6 @@ def inicializar_saldos(request):
 
 
 def generar_pdf_h90(request, pk):
-
     try:
         solicitud = SolicitudesDePago.objects.get(pk=pk)
     except SolicitudesDePago.DoesNotExist:
@@ -109,6 +110,58 @@ def generar_pdf_h90(request, pk):
     if not pdf.err:
         response = HttpResponse(result.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="H90_{solicitud.numero_de_H90}.pdf"'
+        return response
+
+    return HttpResponse('Error al generar el PDF', status=500)
+
+
+@staff_member_required
+def generar_pdf_operaciones(request):
+    model_admin = OperacionesEmitidasAdmin(OperacionesEmitidas, admin.site)
+
+    qs = model_admin.get_queryset(request)
+    changelist = model_admin.get_changelist_instance(request)
+    queryset_filtrado = changelist.get_queryset(request)
+
+    operaciones = []
+    total_importe = 0
+    for op in queryset_filtrado:
+        operaciones.append({
+            'h90': op.solicitud.numero_de_H90,
+            'no_cheque': op.numero_serie,
+            'fecha_inicial': op.fecha_inicial.strftime("%d/%m/%Y") if op.fecha_inicial else "—",
+            'importe': f"{float(op.importe_emitido):,.2f}".replace(",", " ").replace(".", ","),
+            'estado': op.estado,
+            'fecha_final': op.fecha_final.strftime("%d/%m/%Y") if op.fecha_final else "—",
+            'concepto': model_admin.mostrar_concepto(op),
+            'suministrador': str(
+                op.solicitud.identificador_del_proveedor) if op.solicitud.identificador_del_proveedor else "",
+        })
+        total_importe += float(op.importe_emitido)
+
+    total_importe_str = f"{total_importe:,.2f}".replace(",", " ").replace(".", ",")
+
+    filtros = []
+    for key, value in request.GET.items():
+        if key not in ('p', 'o'):
+            filtros.append(f"{key}: {value}")
+    filtros_aplicados = ", ".join(filtros) if filtros else ""
+
+    template = get_template('admin/operaciones_pdf.html')
+    context = {
+        'operaciones': operaciones,
+        'cantidad': len(operaciones),
+        'total_importe': total_importe_str,
+        'filtros_aplicados': filtros_aplicados,
+    }
+    html = template.render(context)
+
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="Operaciones_Emitidas.pdf"'
         return response
 
     return HttpResponse('Error al generar el PDF', status=500)

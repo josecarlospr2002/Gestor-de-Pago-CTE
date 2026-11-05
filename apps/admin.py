@@ -718,6 +718,18 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         extra_context['show_history'] = False
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path("imprimir-operaciones/", self.admin_site.admin_view(self.imprimir_operaciones),
+                 name="operacionesemitidas_imprimir"),
+        ]
+        return custom_urls + urls
+
+    def imprimir_operaciones(self, request):
+        query = request.GET.urlencode()
+        return redirect(f"/admin/imprimir-operaciones/?{query}")
+
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
         response = super().changelist_view(request, extra_context=extra_context)
@@ -737,9 +749,12 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
 
         extra_context['cantidad_operaciones'] = cantidad_operaciones
         extra_context['importe_total_operaciones'] = formato(importe_total)
+
+        query = request.GET.urlencode()
+        extra_context['url_imprimir'] = f"/admin/imprimir-operaciones/?{query}"
+
         response.context_data.update(extra_context)
         return response
-
 
 # Filtro por Año (Ingresos)
 class AñoFilterIngreso(admin.SimpleListFilter):
