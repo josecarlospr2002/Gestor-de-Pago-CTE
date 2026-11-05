@@ -10,6 +10,7 @@ from .models import Proveedores, SolicitudesDePago, ConceptoNormal, ConceptoSala
     ServicioBancario, AjusteInversiones, SaldoInicial
 from django.utils.html import format_html
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.safestring import mark_safe
 
 
 def _saldos_iniciales_listos():
@@ -756,6 +757,7 @@ class OperacionesEmitidasAdmin(admin.ModelAdmin):
         response.context_data.update(extra_context)
         return response
 
+
 # Filtro por Año (Ingresos)
 class AñoFilterIngreso(admin.SimpleListFilter):
     title = 'Año'
@@ -874,8 +876,6 @@ class IngresoAdmin(admin.ModelAdmin):
         extra_context['cantidad_ingresos'] = cantidad_ingresos
         extra_context['importe_total_ingresos'] = formato(importe_total)
 
-        from django.utils.safestring import mark_safe
-
         query = request.GET.urlencode()
         url = f"/admin/imprimir-ingresos/?{query}"
 
@@ -894,6 +894,7 @@ class IngresoAdmin(admin.ModelAdmin):
 
     def get_ordering(self, request):
         return ()
+
 
 # Filtro por Año (Servicios Bancarios)
 class AñoFilterSB(admin.SimpleListFilter):
@@ -999,7 +1000,6 @@ class ServicioBancarioAdmin(admin.ModelAdmin):
         extra_context['cantidad_servicios'] = cantidad_servicios
         extra_context['importe_total_servicios'] = formato(importe_total)
 
-        from django.utils.safestring import mark_safe
         query = request.GET.urlencode()
         url = f"/admin/imprimir-servicios/?{query}"
 
@@ -1086,6 +1086,18 @@ class AjusteInversionesAdmin(admin.ModelAdmin):
     fecha_formateada.short_description = "Fecha"
     fecha_formateada.admin_order_field = "fecha"
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path("imprimir-ajustes/", self.admin_site.admin_view(self.imprimir_ajustes),
+                 name="ajusteinversiones_imprimir"),
+        ]
+        return custom_urls + urls
+
+    def imprimir_ajustes(self, request):
+        query = request.GET.urlencode()
+        return redirect(f"/admin/imprimir-ajustes/?{query}")
+
     def changelist_view(self, request, extra_context=None):
         if not _saldos_iniciales_listos():
             messages.warning(request, MENSAJE_BLOQUEO)
@@ -1107,6 +1119,19 @@ class AjusteInversionesAdmin(admin.ModelAdmin):
 
         extra_context['cantidad_ajustes'] = cantidad_ajustes
         extra_context['importe_total_ajustes'] = formato(importe_total)
+
+        query = request.GET.urlencode()
+        url = f"/admin/imprimir-ajustes/?{query}"
+
+        boton_html = mark_safe(
+            f'<a class="btn btn-success btn-sm" '
+            f'href="{url}" target="_blank" '
+            f'style="background-color: #28a745; border-color: #218838; color: white; '
+            f'margin-right: 10px; padding-top: 7px; padding-bottom: 7px; font-weight: bold;">'
+            f'<i class="fas fa-print" style="margin-right: 6px;"></i> Imprimir Tabla</a>'
+        )
+
+        extra_context['boton_imprimir_ajuste'] = boton_html
         response.context_data.update(extra_context)
         return response
 

@@ -3,7 +3,7 @@ from django.urls import path
 from django.shortcuts import redirect
 
 from apps.views import inicializar_saldos, generar_pdf_h90, generar_pdf_operaciones, generar_pdf_ingresos, \
-    generar_pdf_servicios
+    generar_pdf_servicios, generar_pdf_ajustes
 
 urlpatterns = [
     path('', lambda request: redirect('admin/login/')),
@@ -16,6 +16,8 @@ urlpatterns = [
     path('admin/imprimir-ingresos/', generar_pdf_ingresos, name='imprimir_ingresos'),
 
     path('admin/imprimir-servicios/', generar_pdf_servicios, name='imprimir_servicios'),
+
+    path('admin/imprimir-ajustes/', generar_pdf_ajustes, name='imprimir_ajustes'),
 
     path('admin/', admin.site.urls),
 ]

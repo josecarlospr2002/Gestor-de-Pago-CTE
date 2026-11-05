@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Reporte de Ajustes de Inversiones</title>
+    <style>
+        @page {
+            size: letter portrait;
+            margin: 1.5cm 0.6cm;
+        }
+        body {
+            font-family: "Helvetica", Arial, sans-serif;
+            font-size: 8pt;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            margin-bottom: 15px;
+            border-bottom: 2px solid #1a88ff;
+            padding-bottom: 10px;
+            padding-left: 5px;
+        }
+        .header h1 {
+            font-size: 16pt;
+            color: #1a88ff;
+            margin: 0;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background-color: #1a88ff;
+            color: white;
+            padding: 6px 4px;
+            font-size: 8.5pt;
+            border: 1px solid #146cbf;
+            text-align: center;
+            font-weight: bold;
+        }
+        td {
+            padding: 6px 4px;
+            border: 1px solid #ddd;
+            font-size: 7.5pt;
+            vertical-align: top;
+            line-height: 1.3;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .center { text-align: center; }
+        .right { text-align: right; }
+
+        .col-fecha { width: 15%; }
+        .col-importe { width: 15%; }
+        .col-clave { width: 20%; }
+        .col-desc { width: 50%; }
+
+        .total-row td {
+            font-weight: bold;
+            background-color: #eef5fc;
+            color: #000;
+            border-top: 2px solid #1a88ff;
+            border-bottom: 2px solid #1a88ff;
+            padding: 8px 4px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 7.5pt;
+            text-align: right;
+            color: #888;
+            padding-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Reporte de Ajustes de Inversiones</h1>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="col-fecha">Fecha</th>
+                <th class="col-importe">Importe</th>
+                <th class="col-clave">Clave</th>
+                <th class="col-desc">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for op in ajustes %}
+                <tr>
+                    <td class="center">{{ op.fecha }}</td>
+                    <td class="right">$ {{ op.importe }}</td>
+                    <td class="center">{{ op.clave }}</td>
+                    <td>{{ op.descripcion }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="center" style="padding: 15px;">No hay ajustes de inversiones para mostrar.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td class="right">Totales ({{ cantidad }} ajustes):</td>
+                <td class="right">$ {{ total_importe }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="footer">
+        Generado el {% now "d/m/Y H:i" %} — Gestor de Pagos CTE
+    </div>
+
+</body>
+</html>

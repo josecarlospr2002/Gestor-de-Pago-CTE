@@ -7,11 +7,11 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from io import BytesIO
-from .models import SolicitudesDePago, OperacionesEmitidas, Ingreso, ServicioBancario
+from .models import SolicitudesDePago, OperacionesEmitidas, Ingreso, ServicioBancario, AjusteInversiones
 
 from .models import SaldoInicial
 from django.contrib import admin
-from .admin import OperacionesEmitidasAdmin, IngresoAdmin, ServicioBancarioAdmin
+from .admin import OperacionesEmitidasAdmin, IngresoAdmin, ServicioBancarioAdmin, AjusteInversionesAdmin
 
 CUENTAS = ("CUP", "ANIR", "PRESUPUESTO")
 CAMPOS = (
@@ -241,6 +241,44 @@ def generar_pdf_servicios(request):
     if not pdf.err:
         response = HttpResponse(result.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = 'inline; filename="Servicios_Bancarios.pdf"'
+        return response
+
+    return HttpResponse('Error al generar el PDF', status=500)
+
+
+@staff_member_required
+def generar_pdf_ajustes(request):
+    model_admin = AjusteInversionesAdmin(AjusteInversiones, admin.site)
+    changelist = model_admin.get_changelist_instance(request)
+    queryset_filtrado = changelist.get_queryset(request)
+
+    ajustes = []
+    total_importe = 0
+    for op in queryset_filtrado:
+        ajustes.append({
+            'fecha': op.fecha.strftime("%d/%m/%Y") if op.fecha else "—",
+            'importe': f"{float(op.importe):,.2f}".replace(",", " ").replace(".", ","),
+            'clave': op.clave,
+            'descripcion': op.descripcion or "—",
+        })
+        total_importe += float(op.importe)
+
+    total_importe_str = f"{total_importe:,.2f}".replace(",", " ").replace(".", ",")
+
+    template = get_template('admin/ajustes_pdf.html')
+    context = {
+        'ajustes': ajustes,
+        'cantidad': len(ajustes),
+        'total_importe': total_importe_str,
+    }
+    html = template.render(context)
+
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="Ajustes_Inversiones.pdf"'
         return response
 
     return HttpResponse('Error al generar el PDF', status=500)
