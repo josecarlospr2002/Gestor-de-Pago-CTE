@@ -460,6 +460,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
                  name="solicitudesdepago_get_proveedor"),
             path("emitir-h90/<int:pk>/", self.admin_site.admin_view(self.emitir_h90),
                  name="solicitudesdepago_emitir"),
+            path("cancelar-emision/<int:pk>/", self.admin_site.admin_view(self.cancelar_emision),
+                 name="solicitudesdepago_cancelar_emision"),
         ]
         return custom_urls + urls
 
@@ -499,6 +501,16 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             'solicitud': solicitud,
             'opts': self.model._meta,
         })
+
+    def cancelar_emision(self, request, pk):
+        solicitud = get_object_or_404(SolicitudesDePago, pk=pk)
+
+        if solicitud.estado == "Emitido" and not solicitud.operaciones_emitidas.exists():
+            solicitud.estado = "Activo"
+            solicitud.save()
+            messages.warning(request, "Emisión cancelada. El H90 ha vuelto al estado Activo.")
+
+        return redirect('admin:apps_solicitudesdepago_change', pk)
 
     def get_next_h90(self, request):
         forma = request.GET.get("forma")
