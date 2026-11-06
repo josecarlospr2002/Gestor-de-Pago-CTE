@@ -1,14 +1,14 @@
-"""
-Django settings for gestor_pagos project.
-"""
-
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-nl7l^4kmg0jkc^3=n-@rtmbbo6$$&e#brtz#_z^xm5annk2fni'
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-nl7l^4kmg0jkc^3=n-@rtmbbo6$$&e#brtz#_z^xm5annk2fni')
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps',
 ]
+
 JAZZMIN_SETTINGS = {
     "custom_css": "custom/custom.css",
     "site_title": "Gestor de Pagos CTE",
@@ -99,8 +100,8 @@ WSGI_APPLICATION = 'gestor_pagos.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': BASE_DIR / os.environ.get('DB_NAME', 'db.sqlite3'),
     }
 }
 
