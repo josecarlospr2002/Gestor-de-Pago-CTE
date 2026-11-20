@@ -2,11 +2,22 @@ from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
 
-from apps.views import inicializar_saldos, generar_pdf_h90, generar_pdf_operaciones, generar_pdf_ingresos, \
-    generar_pdf_servicios, generar_pdf_ajustes
+from apps.views import (
+    inicializar_saldos,
+    generar_pdf_h90,
+    generar_pdf_operaciones,
+    generar_pdf_ingresos,
+    generar_pdf_servicios,
+    generar_pdf_ajustes,
+    login_view,
+    logout_view,
+)
 
 urlpatterns = [
-    path('', lambda request: redirect('admin/login/')),
+    path('', lambda request: redirect('login'), name='root_redirect'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+
     path('admin/inicializar-saldos/', inicializar_saldos, name='inicializar_saldos'),
 
     path('admin/imprimir-h90/<int:pk>/', generar_pdf_h90, name='imprimir_h90'),

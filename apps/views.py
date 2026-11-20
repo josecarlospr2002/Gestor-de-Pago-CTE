@@ -13,6 +13,9 @@ from .models import SaldoInicial
 from django.contrib import admin
 from .admin import OperacionesEmitidasAdmin, IngresoAdmin, ServicioBancarioAdmin, AjusteInversionesAdmin
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import AuthenticationForm
+
 CUENTAS = ("CUP", "ANIR", "PRESUPUESTO")
 CAMPOS = (
     ("saldo_empresa", "Saldo de Empresa"),
@@ -282,3 +285,41 @@ def generar_pdf_ajustes(request):
         return response
 
     return HttpResponse('Error al generar el PDF', status=500)
+
+
+# AUTENTICACIÓN PERSONALIZADA
+
+def login_view(request):
+
+    # Si ya está autenticado, mandarlo directo al admin
+    if request.user.is_authenticated:
+        return redirect('admin:index')
+
+    error = None
+    form = AuthenticationForm(request, data=request.POST or None)
+
+    if request.method == "POST":
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('admin:index')
+        else:
+            error = "Usuario o contraseña incorrectos. Verifique e intente de nuevo."
+
+    context = {
+        'form': form,
+        'error': error,
+        'next': request.GET.get('next', ''),
+        'titulo': 'Iniciar Sesión',
+    }
+    return render(request, 'auth/login.html', context)
+
+
+def logout_view(request):
+    """Cierra la sesión y redirige directamente al login."""
+    logout(request)
+    return redirect('login')

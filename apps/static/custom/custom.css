@@ -1,41 +1,43 @@
 /* Estilo para la tabla de Solicitudes de Pago */
 body.model-solicitudesdepago #result_list tr {
-  background-color: #f5b92e;
+    background-color: #f5b92e;
 }
 
 /* Estilo para la tabla de Proveedores */
 body.model-proveedores #result_list tr {
-  background-color: #ffffff !important;
+    background-color: #ffffff !important;
 }
 
 /* Solicitudes de pago: enlaces en negro */
 body.model-solicitudesdepago #result_list td a {
-  color: #000000 !important;
-  text-decoration: none;
+    color: #000000 !important;
+    text-decoration: none;
 }
+
 body.model-solicitudesdepago #result_list td a:hover {
-  color: #333333 !important;
-  text-decoration: underline;
+    color: #333333 !important;
+    text-decoration: underline;
 }
 
 /* Encabezados de la tabla de solicitudes de pago */
 body.model-solicitudesdepago #result_list thead th {
-  color: #000000 !important;
-  background-color: #fffde7;
+    color: #000000 !important;
+    background-color: #fffde7;
 }
 
 body.model-solicitudesdepago #result_list thead th:hover {
-  color: #333333 !important;
+    color: #333333 !important;
 }
 
 /* Proveedores: enlaces en negro */
 body.model-proveedores #result_list td a {
-  color: #000000 !important;
-  text-decoration: none;
+    color: #000000 !important;
+    text-decoration: none;
 }
+
 body.model-proveedores #result_list td a:hover {
-  color: #333333 !important;
-  text-decoration: underline;
+    color: #333333 !important;
+    text-decoration: underline;
 }
 
 /* Filas canceladas: fondo gris */
@@ -47,6 +49,7 @@ body.model-solicitudesdepago #result_list tr.cancelado td a {
     color: #616161 !important;
     text-decoration: none;
 }
+
 body.model-solicitudesdepago #result_list tr.cancelado td a:hover {
     color: #424242 !important;
     text-decoration: underline;
@@ -81,6 +84,7 @@ body.model-operacionesemitidas #result_list tr.cancelado td a {
     color: #616161 !important;
     text-decoration: none;
 }
+
 body.model-operacionesemitidas #result_list tr.cancelado td a:hover {
     color: #424242 !important;
     text-decoration: underline;
@@ -90,6 +94,7 @@ body.model-operacionesemitidas #result_list tr.cancelado td a:hover {
 body.model-operacionesemitidas #result_list th.column-mostrar_estado_operacion {
     display: none;
 }
+
 body.model-operacionesemitidas #result_list td.field-mostrar_estado_operacion {
     display: none;
 }
@@ -115,6 +120,7 @@ body.model-operacionesemitidas #result_list td a {
     color: #000000 !important;
     text-decoration: none;
 }
+
 body.model-operacionesemitidas #result_list td a:hover {
     color: #333333 !important;
     text-decoration: underline;
@@ -129,6 +135,7 @@ body.model-operacionesemitidas #result_list tr.cancelado td a {
     color: #616161 !important;
     text-decoration: none;
 }
+
 body.model-operacionesemitidas #result_list tr.cancelado td a:hover {
     color: #424242 !important;
     text-decoration: underline;
@@ -138,6 +145,7 @@ body.model-operacionesemitidas #result_list tr.cancelado td a:hover {
 body.model-operacionesemitidas #result_list tr {
     background-color: #ffffff !important;
 }
+
 body.model-operacionesemitidas #result_list tr.row1,
 body.model-operacionesemitidas #result_list tr.row2 {
     background-color: #ffffff !important;
@@ -147,6 +155,7 @@ body.model-operacionesemitidas #result_list tr.row2 {
 body.model-operacionesemitidas #result_list th.column-mostrar_estado_operacion {
     display: none;
 }
+
 body.model-operacionesemitidas #result_list td.field-mostrar_estado_operacion {
     display: none;
 }
@@ -156,6 +165,7 @@ body.model-ingreso #result_list td a {
     color: #000000 !important;
     text-decoration: none;
 }
+
 body.model-ingreso #result_list td a:hover {
     color: #333333 !important;
     text-decoration: underline;
@@ -166,6 +176,7 @@ body.model-serviciobancario #result_list td a {
     color: #000000 !important;
     text-decoration: none;
 }
+
 body.model-serviciobancario #result_list td a:hover {
     color: #333333 !important;
     text-decoration: underline;
@@ -176,7 +187,303 @@ body.model-ajusteinversiones #result_list td a {
     color: #000000 !important;
     text-decoration: none;
 }
+
 body.model-ajusteinversiones #result_list td a:hover {
     color: #333333 !important;
     text-decoration: underline;
+}
+
+.auth-body-v2 {
+    margin: 0;
+    padding: 40px 20px;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #e8f1fb 0%, #f0f4f8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* AUTENTICACIÓN */
+
+.auth-card-v2 {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(26, 136, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cabecera azul */
+.auth-card-header-v2 {
+    background: linear-gradient(135deg, #1a88ff 0%, #0062cc 100%);
+    padding: 40px 30px 32px 30px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-card-header-v2::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 180px;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+}
+
+.auth-card-header-v2::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    left: -40px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+}
+
+.auth-card-icon-v2 {
+    position: relative;
+    z-index: 1;
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 16px auto;
+    background: rgba(255, 255, 255, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #fff;
+}
+
+/* Nombre de la empresa */
+.auth-card-company-v2 {
+    position: relative;
+    z-index: 1;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+    color: #fff;
+    letter-spacing: -0.4px;
+    text-transform: none;
+}
+
+/* Nombre de la app */
+.auth-card-title-v2 {
+    position: relative;
+    z-index: 1;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.4px;
+    color: #fff;
+}
+
+/* Subtítulo */
+.auth-card-subtitle-v2 {
+    position: relative;
+    z-index: 1;
+    font-size: 13.5px;
+    margin: 0;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+/* Cuerpo blanco */
+.auth-card-body-v2 {
+    padding: 32px 36px 36px 36px;
+    background: #fff;
+}
+
+.auth-form-header-v2 {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.auth-form-header-v2 h2 {
+    font-size: 20px;
+    color: #222;
+    margin: 0 0 4px 0;
+    font-weight: 700;
+}
+
+.auth-form-header-v2 p {
+    font-size: 13px;
+    color: #888;
+    margin: 0;
+}
+
+/* Alertas */
+.auth-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 18px;
+    font-weight: 500;
+}
+
+.auth-alert-error {
+    background: #fdecea;
+    color: #c0392b;
+    border-left: 4px solid #e74c3c;
+}
+
+.auth-alert i {
+    font-size: 15px;
+}
+
+/* Formulario */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-field label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-field label i {
+    color: #1a88ff;
+    margin-right: 6px;
+    width: 14px;
+    text-align: center;
+}
+
+.auth-field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #dfe6ee;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #222;
+    background: #f8fafc;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.auth-field input:focus {
+    outline: none;
+    border-color: #1a88ff;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26, 136, 255, 0.15);
+}
+
+.auth-field input::placeholder {
+    color: #a0aab5;
+}
+
+/* Contraseña con ojo */
+.auth-password-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.auth-password-wrap input {
+    padding-right: 44px;
+}
+
+.auth-toggle-pass {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #8a97a5;
+    cursor: pointer;
+    padding: 6px 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.auth-toggle-pass:hover {
+    color: #1a88ff;
+    background: rgba(26, 136, 255, 0.08);
+}
+
+/* Botón submit */
+.auth-btn-submit {
+    margin-top: 8px;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, #1a88ff 0%, #0062cc 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 6px 18px rgba(26, 136, 255, 0.35);
+    font-family: inherit;
+}
+
+.auth-btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(26, 136, 255, 0.45);
+}
+
+.auth-btn-submit:active {
+    transform: translateY(0);
+}
+
+.auth-btn-submit i {
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+    .auth-body-v2 {
+        padding: 20px 12px;
+    }
+
+    .auth-card-header-v2 {
+        padding: 32px 20px 26px 20px;
+    }
+
+    .auth-card-company-v2,
+    .auth-card-title-v2 {
+        font-size: 22px;
+    }
+
+    .auth-card-icon-v2 {
+        width: 58px;
+        height: 58px;
+        font-size: 26px;
+    }
+
+    .auth-card-body-v2 {
+        padding: 26px 22px 26px 22px;
+    }
+
 }
