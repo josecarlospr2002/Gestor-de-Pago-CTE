@@ -13,14 +13,15 @@
             <p><strong>Conceptos:</strong> {{ solicitud.mostrar_conceptos_pago }}</p>
         </div>
 
-        <form method="post">
+        <form method="post" id="form-emitir">
             {% csrf_token %}
             <div style="margin-bottom: 15px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Número de Serie (7
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Número de Serie (1 a 7
                     dígitos):</label>
-                <input type="text" name="numero_serie" required pattern="\d{7}" maxlength="7" minlength="7"
-                       title="Debe contener exactamente 7 dígitos numéricos."
-                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="text" name="numero_serie" id="id_numero_serie" required pattern="\d{1,7}" maxlength="7"
+                       title="Debe contener entre 1 y 7 dígitos numéricos."
+                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                       placeholder="Calculando...">
             </div>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; font-weight: bold; margin-bottom: 5px;">Fecha Inicial:</label>
@@ -37,4 +38,33 @@
             </div>
         </form>
     </div>
+
+    <!-- Calcular el número de serie automáticamente -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputNumeroSerie = document.getElementById("id_numero_serie");
+
+            // Se obtiene la forma de pago, cuenta de empresa y fecha de la solicitud desde el backend
+            const formaPago = "{{ solicitud.forma_de_pago|escapejs }}";
+            const cuenta = "{{ solicitud.cuenta_de_empresa|escapejs }}";
+            const fecha = "{{ solicitud.fecha_del_modelo|date:'Y-m-d' }}";
+
+            if (formaPago && cuenta && fecha) {
+                const url = `/admin/apps/solicitudesdepago/get-next-numero-serie/?forma=${formaPago}&cuenta=${cuenta}&fecha=${fecha}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.numero) {
+                            inputNumeroSerie.value = data.numero;
+                        } else {
+                            inputNumeroSerie.value = "1";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error al calcular el número de serie:", error);
+                        inputNumeroSerie.value = ""; // Permite escribir manualmente si falla
+                    });
+            }
+        });
+    </script>
 {% endblock %}

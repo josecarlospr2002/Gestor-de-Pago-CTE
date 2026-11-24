@@ -461,6 +461,8 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
                  name="solicitudesdepago_emitir"),
             path("cancelar-emision/<int:pk>/", self.admin_site.admin_view(self.cancelar_emision),
                  name="solicitudesdepago_cancelar_emision"),
+            path("get-next-numero-serie/", self.admin_site.admin_view(self.get_next_numero_serie),
+                 name="solicitudesdepago_get_next_numero_serie"),
         ]
         return custom_urls + urls
 
@@ -471,9 +473,22 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             numero_serie = request.POST.get("numero_serie")
             fecha_inicial = request.POST.get("fecha_inicial")
 
-            if not numero_serie or not fecha_inicial:
-                messages.error(request, "Debe completar Número de Serie y Fecha Inicial.")
+            if not fecha_inicial:
+                messages.error(request, "Debe completar la Fecha Inicial.")
                 return redirect('admin:apps_solicitudesdepago_change', pk)
+
+            if not numero_serie:
+                año = solicitud.fecha_del_modelo.year
+                ultimo = OperacionesEmitidas.objects.filter(
+                    solicitud__forma_de_pago=solicitud.forma_de_pago,
+                    solicitud__cuenta_de_empresa=solicitud.cuenta_de_empresa,
+                    solicitud__fecha_del_modelo__year=año
+                ).order_by('-id').first()
+
+                if ultimo and ultimo.numero_serie and ultimo.numero_serie.isdigit():
+                    numero_serie = str(int(ultimo.numero_serie) + 1)
+                else:
+                    numero_serie = "1"
 
             solicitud.estado = "Emitido"
             solicitud._operacion_creada = True
@@ -525,6 +540,33 @@ class SolicitudesDePagoAdmin(admin.ModelAdmin):
             fecha_del_modelo__year=año
         ).order_by('-numero_de_H90').first()
         nuevo = ultimo.numero_de_H90 + 1 if ultimo else 1
+        return JsonResponse({"numero": nuevo})
+
+    def get_next_numero_serie(self, request):
+        forma = request.GET.get("forma")
+        cuenta = request.GET.get("cuenta")
+        fecha = request.GET.get("fecha")
+        if not forma or not cuenta or not fecha:
+            return JsonResponse({"numero": "1"})
+
+        from datetime import datetime
+        try:
+            año = datetime.strptime(fecha, "%Y-%m-%d").year
+        except ValueError:
+            return JsonResponse({"numero": "1"})
+
+        ultimo = OperacionesEmitidas.objects.filter(
+            solicitud__forma_de_pago=forma,
+            solicitud__cuenta_de_empresa=cuenta,
+            solicitud__fecha_del_modelo__year=año
+        ).order_by('-id').first()
+
+        # Si hay un último registro y su número es válido, sumamos 1. Si no, empezamos en 1.
+        if ultimo and ultimo.numero_serie and ultimo.numero_serie.isdigit():
+            nuevo = str(int(ultimo.numero_serie) + 1)
+        else:
+            nuevo = "1"
+
         return JsonResponse({"numero": nuevo})
 
     def get_proveedor(self, request, pk):

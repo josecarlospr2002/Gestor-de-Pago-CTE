@@ -328,6 +328,7 @@ class OperacionesEmitidas(models.Model):
         validators=[MinValueValidator(0)],
         verbose_name="Importe Emitido"
     )
+
     numero_serie = models.CharField(
         max_length=7,
         verbose_name="Número de Serie",
@@ -335,11 +336,12 @@ class OperacionesEmitidas(models.Model):
         null=False,
         validators=[
             RegexValidator(
-                regex=r'^\d{7}$',
-                message="El Número de Serie debe contener exactamente 7 dígitos numéricos."
+                regex=r'^\d{1,7}$',
+                message="El Número de Serie debe contener entre 1 y 7 dígitos numéricos."
             )
         ]
     )
+
     fecha_inicial = models.DateField(
         verbose_name="Fecha Inicial",
         null=False,
@@ -405,7 +407,37 @@ class OperacionesEmitidas(models.Model):
                     "estado": "Una operación Cancelada no puede pasar a Debitado. Solo puede volver a Tránsito."
                 })
 
+        # Validar que el número de serie no se repita en la misma combinación
+        if self.solicitud_id and self.numero_serie:
+            año = self.solicitud.fecha_del_modelo.year
+            existe = OperacionesEmitidas.objects.filter(
+                solicitud__forma_de_pago=self.solicitud.forma_de_pago,
+                solicitud__cuenta_de_empresa=self.solicitud.cuenta_de_empresa,
+                solicitud__fecha_del_modelo__year=año,
+                numero_serie=self.numero_serie
+            ).exclude(pk=self.pk).exists()
+            if existe:
+                raise ValidationError({
+                    "numero_serie": f"Ya existe una operación con el número de serie {self.numero_serie} "
+                                    f"para {self.solicitud.forma_de_pago} - {self.solicitud.cuenta_de_empresa} en el año {año}."
+                })
+
     def save(self, *args, **kwargs):
+        # Si el número de serie viene vacío, se calcula automáticamente
+        if not self.numero_serie and self.solicitud_id:
+            año = self.solicitud.fecha_del_modelo.year
+            ultimo = OperacionesEmitidas.objects.filter(
+                solicitud__forma_de_pago=self.solicitud.forma_de_pago,
+                solicitud__cuenta_de_empresa=self.solicitud.cuenta_de_empresa,
+                solicitud__fecha_del_modelo__year=año
+            ).order_by('-id').first()
+
+            # Se extrae el número del último registro
+            if ultimo and ultimo.numero_serie.isdigit():
+                self.numero_serie = str(int(ultimo.numero_serie) + 1)
+            else:
+                self.numero_serie = "1"
+
         if self.pk:
             original = OperacionesEmitidas.objects.get(pk=self.pk)
 
